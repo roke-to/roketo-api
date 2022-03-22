@@ -1,0 +1,21 @@
+on: [push]
+
+name: Test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.1
+
+      - name: Install 🔧
+        working-directory: frontend
+        run: yarn
+      
+      - name: Lint 🌸 
+        run: yarn lint
+
+      - name: Run tests 🧪
+        run: yarn test
