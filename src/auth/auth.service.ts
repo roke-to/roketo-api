@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { connect, utils } from 'near-api-js';
+import { JwtService } from '@nestjs/jwt';
 
 const DAO_ID = 'dev-1635510732093-17387698050424';
 
@@ -15,6 +16,8 @@ const TESTNET_CONFIG = {
 
 @Injectable()
 export class AuthService {
+  constructor(private readonly jwtService: JwtService) {}
+
   async validateUser(
     accountId: string,
     message: string,
@@ -48,5 +51,12 @@ export class AuthService {
     }
 
     return null;
+  }
+
+  async login(user) {
+    const payload = { sub: user.accountId };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
   }
 }
