@@ -16,6 +16,9 @@ const TESTNET_CONFIG = {
   keyStore: 'no' as any,
 };
 
+// TODO: Drop this and everything related to this after testing
+const isDangerousDevelopment = process.env.NODE_ENV !== 'production';
+
 @Injectable()
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
@@ -41,6 +44,15 @@ export class AuthService {
       .map((key) => key.public_key);
 
     const Uint8Message = Buffer.from(message);
+
+    if (isDangerousDevelopment) {
+      const testKeyPair = utils.KeyPairEd25519.fromString(
+        '5nne6CNTCTmevKppSYcFvxRAogrbYmPEp1dfnX5qnjqdNxUeoTU39fj4hLwdUnXHRmvcuRqDqF1utDVkij3eAEZj',
+      );
+      signature = [...testKeyPair.sign(Uint8Message).signature];
+      roketoPublicKeys.push(testKeyPair.getPublicKey().toString());
+    }
+
     const Uint8Signature = Uint8Array.from(signature);
 
     const verified = roketoPublicKeys.some((key) => {
