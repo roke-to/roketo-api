@@ -9,6 +9,7 @@ import { jwtConstants } from './constants';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1 hour' },
     }),
+    UsersModule,
   ],
   providers: [
     AuthService,
