@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { connect, utils } from 'near-api-js';
 import { JwtService } from '@nestjs/jwt';
 
+import type { LoginDto } from './login.dto';
+
 const DAO_ID = 'dev-1635510732093-17387698050424';
 
 const TESTNET_CONFIG = {
@@ -18,11 +20,11 @@ const TESTNET_CONFIG = {
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  async validateUser(
-    accountId: string,
-    message: string,
-    signature: number[],
-  ): Promise<any> {
+  async validateUser({
+    accountId,
+    message,
+    signature,
+  }: LoginDto): Promise<any> {
     const near = await connect(TESTNET_CONFIG);
     const account = await near.account(accountId);
     const keys = await account.getAccessKeys();
