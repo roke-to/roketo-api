@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import type { LoginDto } from './login.dto';
 import { UsersService } from '../users/users.service';
+import { AccessTokenDto } from './access-token.dto';
 
 // TODO: Drop this and everything related to this after testing
 const isDangerousDevelopment = process.env.NODE_ENV !== 'production';
@@ -43,10 +44,10 @@ export class AuthService {
     return verified ? { accountId } : null;
   }
 
-  async login(user) {
+  login(user): AccessTokenDto {
     const payload = { sub: user.accountId };
     return {
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
     };
   }
 }
