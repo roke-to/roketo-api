@@ -4,6 +4,7 @@ import {
   SwaggerDocumentOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 import { resolve } from 'path';
 import { writeFileSync } from 'fs';
 
@@ -35,6 +36,17 @@ async function bootstrap() {
   }
 
   SwaggerModule.setup('api', app, document);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   await app.listen(process.env.PORT || 3000);
 }
