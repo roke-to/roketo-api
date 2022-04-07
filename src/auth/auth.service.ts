@@ -18,14 +18,14 @@ export class AuthService {
 
   async validateUser({
     accountId,
-    message,
+    timestamp,
     signature,
   }: LoginDto): Promise<any> {
     const roketoPublicKeys = await this.usersService.findUserPublicKeys(
       accountId,
     );
 
-    const Uint8Message = Buffer.from(message);
+    const Uint8Message = Buffer.from(String(timestamp));
 
     if (isDangerousDevelopment) {
       const testKeyPair = utils.KeyPairEd25519.fromString(
