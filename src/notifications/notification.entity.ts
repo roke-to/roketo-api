@@ -1,9 +1,8 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   Index,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 
 export enum NotificationType {
@@ -12,15 +11,15 @@ export enum NotificationType {
 
 @Entity()
 export class Notification {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn()
   id: string;
 
   @Index()
   @Column()
   accountId: string;
 
-  @CreateDateColumn()
-  createdAt: number;
+  @Column({ type: 'numeric', precision: 20, scale: 0 })
+  createdAt: string;
 
   @Column({ default: false })
   isRead: boolean;

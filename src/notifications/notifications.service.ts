@@ -17,12 +17,20 @@ export class NotificationsService {
     return this.notificationsRepository.find({ where: { accountId } });
   }
 
-  create(createNotificationDto: CreateNotificationDto) {
-    const notification = this.notificationsRepository.create(
-      createNotificationDto,
-    );
+  async getLatestTimestamp(): Promise<string> {
+    const [latestNotification] = await this.notificationsRepository.find({
+      order: { createdAt: 'DESC' },
+      select: ['createdAt'],
+      take: 1,
+    });
 
-    return this.notificationsRepository.save(notification);
+    const THE_BEGINNING = '0';
+
+    return latestNotification?.createdAt ?? THE_BEGINNING;
+  }
+
+  createMany(createNotificationDtos: CreateNotificationDto[]) {
+    return this.notificationsRepository.upsert(createNotificationDtos, ['id']);
   }
 
   async markRead(
