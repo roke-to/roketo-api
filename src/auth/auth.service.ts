@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { LoginDto } from './login.dto';
 import { UsersService } from '../users/users.service';
 import { AccessTokenDto } from './access-token.dto';
+import { NearService } from '../near/near.service';
 
 // TODO: Drop this and everything related to this after testing
 const isDangerousDevelopment = process.env.NODE_ENV !== 'production';
@@ -14,6 +15,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly nearService: NearService,
   ) {}
 
   async validateUser({
@@ -21,7 +23,7 @@ export class AuthService {
     timestamp,
     signature,
   }: LoginDto): Promise<any> {
-    const roketoPublicKeys = await this.usersService.findUserPublicKeys(
+    const roketoPublicKeys = await this.nearService.findUserPublicKeys(
       accountId,
     );
 

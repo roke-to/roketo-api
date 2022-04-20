@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { NearModule } from './near/near.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     }),
     NotificationsModule,
     ScheduleModule.forRoot(),
+    NearModule,
   ],
   controllers: [AppController],
   providers: [AppService],

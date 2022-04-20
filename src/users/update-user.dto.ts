@@ -1,5 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, ValidateIf } from 'class-validator';
+import { Exclude } from 'class-transformer';
+
+import { RoketoStream } from '../near/near.service';
 
 export class UpdateUserDto {
   @ApiProperty({ description: 'The name of a user.' })
@@ -10,4 +13,8 @@ export class UpdateUserDto {
   @ValidateIf((object, value) => Boolean(value))
   @IsEmail()
   readonly email: string;
+
+  @ApiHideProperty()
+  @Exclude()
+  streams: RoketoStream[];
 }
