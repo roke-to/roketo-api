@@ -44,8 +44,11 @@ export class AuthService {
     return verified ? { accountId } : null;
   }
 
-  login(user): AccessTokenDto {
+  async login(user): Promise<AccessTokenDto> {
     const payload = { sub: user.accountId };
+
+    await this.usersService.createIfNew(user.accountId);
+
     return {
       accessToken: this.jwtService.sign(payload),
     };

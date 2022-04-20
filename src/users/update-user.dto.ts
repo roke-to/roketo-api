@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, ValidateIf } from 'class-validator';
 
-export class UpsertUserDto {
+export class UpdateUserDto {
   @ApiProperty({ description: 'The name of a user.' })
   @IsString()
   readonly name: string;

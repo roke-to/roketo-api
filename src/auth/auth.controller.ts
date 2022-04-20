@@ -27,7 +27,7 @@ export class AuthController {
     type: AccessTokenDto,
   })
   @ApiBadRequestResponse({ type: BadRequest })
-  login(@Request() req): AccessTokenDto {
+  login(@Request() req) {
     return this.authService.login(req.user);
   }
 }

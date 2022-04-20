@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { createHash } from 'crypto';
 
 import { User } from './user.entity';
-import { UpsertUserDto } from './upsert-user.dto';
+import { UpdateUserDto } from './update-user.dto';
 
 const ROKETO_DAO_ID = 'streaming-roketo.dcversus.testnet';
 
@@ -49,14 +49,18 @@ export class UsersService {
     return user || this.usersRepository.create({ accountId });
   }
 
-  async upsert(accountId: string, updateUserDto: UpsertUserDto): Promise<User> {
-    const upsertedUser = { accountId, ...updateUserDto };
+  async createIfNew(accountId) {
+    const exists =
+      (await this.usersRepository.count({ where: { accountId } })) > 0;
 
-    const user =
-      (await this.usersRepository.preload(upsertedUser)) ||
-      this.usersRepository.create(upsertedUser);
+    if (!exists) {
+      const user = this.usersRepository.create({ accountId });
+      await this.usersRepository.save(user);
+    }
+  }
 
-    return this.usersRepository.save(user);
+  update(accountId: string, updateUserDto: UpdateUserDto) {
+    this.usersRepository.update(accountId, updateUserDto);
   }
 
   async getAvatarUrl(accountId: string) {
