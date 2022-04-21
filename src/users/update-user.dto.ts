@@ -2,7 +2,7 @@ import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, ValidateIf } from 'class-validator';
 import { Exclude } from 'class-transformer';
 
-import { RoketoStream } from '../near/near.service';
+import type { RoketoStream } from '../common/contract.types';
 
 export class UpdateUserDto {
   @ApiProperty({ description: 'The name of a user.' })

@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, getConnection, Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 
-import { NearService, RoketoStream } from '../near/near.service';
 import { UsersService } from '../users/users.service';
+import { ContractService } from '../contract/contract.service';
 import { User } from '../users/user.entity';
+import type { RoketoStream } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
 import { ReadNotificationDto } from './dto/read-notification.dto';
 
@@ -18,7 +19,7 @@ export class NotificationsService {
     private readonly notificationsRepository: Repository<Notification>,
     private readonly connection: Connection,
     private readonly usersService: UsersService,
-    private readonly nearService: NearService,
+    private readonly contractService: ContractService,
   ) {}
 
   async findAll(accountId: string): Promise<Notification[]> {
@@ -56,7 +57,7 @@ export class NotificationsService {
     const users = await this.usersService.findAll();
 
     const allStreams = await Promise.all(
-      users.map((user) => this.nearService.getStreams(user.accountId)),
+      users.map((user) => this.contractService.getStreams(user.accountId)),
     );
 
     await Promise.all(
