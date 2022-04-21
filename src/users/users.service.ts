@@ -30,7 +30,7 @@ export class UsersService {
   }
 
   update(accountId: string, updateUserDto: UpdateUserDto) {
-    this.usersRepository.update(accountId, updateUserDto);
+    return this.usersRepository.update(accountId, updateUserDto);
   }
 
   findAll() {
