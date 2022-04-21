@@ -5,7 +5,13 @@ type StringInt = string;
 type StreamId = string;
 type AccountId = string;
 
-type StreamStatus = 'Initialized' | 'Active' | 'Paused' | { Finished: string };
+export enum StringStreamStatus {
+  Initialized = 'Initialized',
+  Active = 'Active',
+  Paused = 'Paused',
+}
+
+type StreamStatus = StringStreamStatus | { Finished: string };
 
 export type RoketoStream = {
   amount_to_push: StringInt;

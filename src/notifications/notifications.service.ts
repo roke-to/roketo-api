@@ -7,7 +7,7 @@ import { plainToInstance } from 'class-transformer';
 import { UsersService } from '../users/users.service';
 import { ContractService } from '../contract/contract.service';
 import { User } from '../users/user.entity';
-import type { RoketoStream } from '../common/contract.types';
+import { RoketoStream, StringStreamStatus } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
 import { ReadNotificationDto } from './dto/read-notification.dto';
 
@@ -78,11 +78,17 @@ export class NotificationsService {
     const previousStatus = previousStream?.status;
     const currentStatus = currentStream?.status;
 
-    if (previousStatus !== 'Active' && currentStatus === 'Active') {
+    if (
+      currentStatus === StringStreamStatus.Active &&
+      currentStatus !== previousStatus
+    ) {
       return NotificationType.StreamStarted;
     } else if (previousStatus && !currentStatus) {
       return NotificationType.StreamStopped;
-    } else if (previousStatus !== 'Paused' && currentStatus === 'Paused') {
+    } else if (
+      currentStatus === StringStreamStatus.Paused &&
+      currentStatus !== previousStatus
+    ) {
       return NotificationType.StreamPaused;
     } else if (
       typeof previousStatus !== 'object' &&
