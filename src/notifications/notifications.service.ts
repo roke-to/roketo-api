@@ -11,7 +11,7 @@ import type { RoketoStream } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
 import { ReadNotificationDto } from './dto/read-notification.dto';
 
-const EACH_MINUTE = '* */1 * * * *';
+const EACH_MINUTE = '0 */1 * * * *';
 
 @Injectable()
 export class NotificationsService {
