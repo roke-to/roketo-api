@@ -83,18 +83,16 @@ export class NotificationsService {
       currentStatus !== previousStatus
     ) {
       return NotificationType.StreamStarted;
-    } else if (previousStatus && !currentStatus) {
-      return NotificationType.StreamStopped;
+    } else if (
+      (previousStatus && !currentStatus) ||
+      (typeof previousStatus !== 'object' && typeof currentStatus === 'object')
+    ) {
+      return NotificationType.StreamFinished;
     } else if (
       currentStatus === StringStreamStatus.Paused &&
       currentStatus !== previousStatus
     ) {
       return NotificationType.StreamPaused;
-    } else if (
-      typeof previousStatus !== 'object' &&
-      typeof currentStatus === 'object'
-    ) {
-      return NotificationType.StreamFinished;
     }
   }
 

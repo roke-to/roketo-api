@@ -3,7 +3,6 @@ import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 export enum NotificationType {
   StreamStarted = 'StreamStarted',
   StreamPaused = 'StreamPaused',
-  StreamStopped = 'StreamStopped',
   StreamFinished = 'StreamFinished',
 }
 
