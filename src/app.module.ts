@@ -6,7 +6,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { ExplorerModule } from './explorer/explorer.module';
+import { NearModule } from './near/near.module';
+import { ContractModule } from './contract/contract.module';
 
 @Module({
   imports: [
@@ -21,8 +22,9 @@ import { ExplorerModule } from './explorer/explorer.module';
       },
     }),
     NotificationsModule,
-    ExplorerModule,
     ScheduleModule.forRoot(),
+    NearModule,
+    ContractModule,
   ],
   controllers: [AppController],
   providers: [AppService],

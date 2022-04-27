@@ -1,25 +1,22 @@
-import {
-  Column,
-  Entity,
-  Index,
-  PrimaryColumn,
-} from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum NotificationType {
-  StreamCreated = 'StreamCreated',
+  StreamStarted = 'StreamStarted',
+  StreamPaused = 'StreamPaused',
+  StreamFinished = 'StreamFinished',
 }
 
 @Entity()
 export class Notification {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Index()
   @Column()
   accountId: string;
 
-  @Column({ type: 'numeric', precision: 20, scale: 0 })
-  createdAt: string;
+  @Column({ type: 'bigint' })
+  createdAt: number;
 
   @Column({ default: false })
   isRead: boolean;

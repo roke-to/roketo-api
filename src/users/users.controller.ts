@@ -18,7 +18,7 @@ import type { Response } from 'express';
 
 import { UsersService } from './users.service';
 import { Unauthorized } from '../common/dto/unauthorized.dto';
-import { UpsertUserDto } from './upsert-user.dto';
+import { UpdateUserDto } from './update-user.dto';
 import { Public } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('users')
@@ -40,20 +40,18 @@ export class UsersController {
   @ApiBearerAuth()
   @Patch(':accountId')
   @ApiUnauthorizedResponse({ type: Unauthorized })
-  upsert(
+  async update(
     @Param('accountId') accountId: string,
     @Req() req,
-    @Body() body: UpsertUserDto,
+    @Body() body: UpdateUserDto,
   ) {
     if (req.user.accountId !== accountId) {
       throw new ForbiddenException();
     }
 
-    if (Object.keys(body).length === 0) {
-      return this.usersService.findOne(accountId);
+    if (Object.keys(body).length !== 0) {
+      await this.usersService.update(accountId, body);
     }
-
-    return this.usersService.upsert(accountId, body);
   }
 
   @Public()
