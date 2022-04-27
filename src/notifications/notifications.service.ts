@@ -34,16 +34,26 @@ export class NotificationsService {
       return;
     }
 
-    this.isBusy = true;
-
-    this.logger.log('Starting processing streams...');
     const start = Date.now();
+    try {
+      this.isBusy = true;
 
-    await this.processAllUsersStreams();
+      this.logger.log('Starting processing streams...');
 
-    this.logger.log(`Finished processing streams in ${Date.now() - start}ms.`);
+      await this.processAllUsersStreams();
 
-    this.isBusy = false;
+      this.logger.log(
+        `Finished processing streams in ${Date.now() - start}ms.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed processing streams after ${Date.now() - start}ms.`,
+        error.message,
+        error.stack,
+      );
+    } finally {
+      this.isBusy = false;
+    }
   }
 
   private async processAllUsersStreams() {
