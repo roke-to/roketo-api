@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { plainToInstance } from 'class-transformer';
+import BigNumber from 'bignumber.js';
 
 import { UsersService } from '../users/users.service';
 import { ContractService } from '../contract/contract.service';
@@ -11,7 +12,7 @@ import { RoketoStream, StringStreamStatus } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
 import { ReadNotificationDto } from './dto/read-notification.dto';
 
-const EACH_MINUTE = '0 */1 * * * *';
+const EACH_5_SECONDS = '*/5 * * * * *';
 
 @Injectable()
 export class NotificationsService {
@@ -27,7 +28,17 @@ export class NotificationsService {
 
   isBusy = false;
 
-  @Cron(EACH_MINUTE)
+  findDueNotification(accountId: string, streamId: string) {
+    return this.notificationsRepository.findOne({
+      where: {
+        accountId,
+        streamId,
+        type: NotificationType.StreamIsDue,
+      },
+    });
+  }
+
+  @Cron(EACH_5_SECONDS)
   private async generateIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams, skipped.');
@@ -81,35 +92,103 @@ export class NotificationsService {
     }, {});
   }
 
-  private getNotificationType(
+  private async getNotification(
+    accountId: string,
     previousStream?: RoketoStream,
     currentStream?: RoketoStream,
-  ): NotificationType | undefined {
+  ): Promise<
+    | Pick<
+        Notification,
+        'accountId' | 'createdAt' | 'payload' | 'type' | 'streamId'
+      >
+    | undefined
+  > {
+    const commonData = {
+      accountId,
+      streamId: currentStream?.id,
+      createdAt: Date.now(),
+      payload: currentStream,
+    };
+
+    // Refer to https://www.notion.so/kikimora-labs/ROKETO-56-Notification-s-text-ee6b873ab8a045b1af141fb707678d51
     const previousStatus = previousStream?.status;
     const currentStatus = currentStream?.status;
 
     if (
-      currentStatus === StringStreamStatus.Active &&
-      currentStatus !== previousStatus
+      (!previousStatus || previousStatus === StringStreamStatus.Initialized) &&
+      currentStatus &&
+      currentStatus !== StringStreamStatus.Initialized
     ) {
-      return NotificationType.StreamStarted;
-    } else if (
-      (previousStatus && !currentStatus) ||
-      (typeof previousStatus !== 'object' && typeof currentStatus === 'object')
-    ) {
-      return NotificationType.StreamFinished;
+      return {
+        ...commonData,
+        type: NotificationType.StreamStarted,
+      };
     } else if (
       currentStatus === StringStreamStatus.Paused &&
-      currentStatus !== previousStatus
+      previousStatus !== currentStatus
     ) {
-      return NotificationType.StreamPaused;
+      return {
+        ...commonData,
+        type: NotificationType.StreamPaused,
+      };
+    } else if (
+      currentStatus === StringStreamStatus.Active &&
+      previousStatus === StringStreamStatus.Paused
+    ) {
+      return {
+        ...commonData,
+        type: NotificationType.StreamContinued,
+      };
+    } else if (
+      currentStatus === StringStreamStatus.Active &&
+      previousStatus === StringStreamStatus.Active
+    ) {
+      if (currentStream.receiver_id === accountId) {
+        const secondsPassed =
+          (Date.now() - Number(currentStream.last_action) / 1e6) / 1000;
+
+        const streamIsDue = new BigNumber(currentStream.tokens_per_sec)
+          .multipliedBy(secondsPassed)
+          .minus(currentStream.balance)
+          .isPositive();
+
+        if (streamIsDue) {
+          const dueNotification = await this.findDueNotification(
+            accountId,
+            currentStream.id,
+          );
+
+          if (!dueNotification) {
+            return {
+              ...commonData,
+              type: NotificationType.StreamIsDue,
+            };
+          }
+        }
+      }
+    } else if (previousStatus && !currentStream) {
+      const currentFinishedStream = await this.contractService.getStream(
+        previousStream.id,
+      );
+
+      if (
+        previousStatus !== StringStreamStatus.Initialized ||
+        currentFinishedStream.tokens_total_withdrawn !== '0'
+      ) {
+        return {
+          ...commonData,
+          streamId: currentFinishedStream.id,
+          payload: currentFinishedStream,
+          type: NotificationType.StreamFinished,
+        };
+      }
     }
   }
 
-  private generateNotifications(
+  private async generateNotifications(
     user: User,
     currentStreams: RoketoStream[],
-  ): Notification[] {
+  ): Promise<Notification[]> {
     const previousStreamsMap = this.array2Map(user.streams, 'id');
     const currentStreamsMap = this.array2Map(currentStreams, 'id');
 
@@ -120,32 +199,22 @@ export class NotificationsService {
       ]),
     );
 
-    const newNotificationDtos = ids
-      .map((id) => {
+    const newMaybeNotificationDtos = await Promise.all(
+      ids.map((id) => {
         const previousStream = previousStreamsMap[id];
         const currentStream = currentStreamsMap[id];
 
-        const type: NotificationType | undefined = this.getNotificationType(
+        return this.getNotification(
+          user.accountId,
           previousStream,
           currentStream,
         );
-
-        if (type) {
-          return {
-            accountId: user.accountId,
-            type,
-            createdAt: Date.now(),
-            payload: currentStream || previousStream,
-          };
-        }
-      })
-      .filter(Boolean);
-
-    const newNotifications = newNotificationDtos.map((dto) =>
-      plainToInstance(Notification, dto),
+      }),
     );
 
-    return newNotifications;
+    return newMaybeNotificationDtos
+      .filter(Boolean)
+      .map((dto) => plainToInstance(Notification, dto));
   }
 
   private async processUserStreams(user: User, currentStreams: RoketoStream[]) {
@@ -160,7 +229,7 @@ export class NotificationsService {
       );
 
       if (user.streams) {
-        const newNotifications = this.generateNotifications(
+        const newNotifications = await this.generateNotifications(
           user,
           currentStreams,
         );
@@ -171,7 +240,7 @@ export class NotificationsService {
       await queryRunner.commitTransaction();
     } catch (e) {
       this.logger.error(e);
-      this.logger.error(`Error while processing streams of `, user.accountId);
+      this.logger.error(`Error while processing streams of ${user.accountId}`);
       this.logger.error('Previous streams', user.streams);
       this.logger.error('Current streams ', currentStreams);
 

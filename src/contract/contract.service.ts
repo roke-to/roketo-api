@@ -15,18 +15,36 @@ export class ContractService implements OnModuleInit {
     const account = await this.nearService.getAccount(ROKETO_CONTRACT_NAME);
 
     this.contract = new Contract(account, ROKETO_CONTRACT_NAME, {
-      viewMethods: ['get_account_incoming_streams'],
+      viewMethods: [
+        'get_stream',
+        'get_account_incoming_streams',
+        'get_account_outgoing_streams',
+      ],
       changeMethods: [],
     }) as RoketoContract;
   }
 
   async getStreams(accountId) {
-    const response = await this.contract.get_account_incoming_streams({
+    const params = {
       account_id: accountId,
       from: 0,
       limit: 1000000,
-    });
+    };
 
-    return response.Ok;
+    const [incomingResponse, outgoingResponse] = await Promise.all([
+      this.contract.get_account_incoming_streams(params),
+      this.contract.get_account_outgoing_streams(params),
+    ]);
+
+    return [
+      ...(incomingResponse.Ok || incomingResponse || []),
+      ...(outgoingResponse.Ok || outgoingResponse || []),
+    ];
+  }
+
+  async getStream(id) {
+    const streamResponse = await this.contract.get_stream({ stream_id: id });
+
+    return streamResponse.Ok || streamResponse;
   }
 }

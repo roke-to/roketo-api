@@ -4,9 +4,12 @@ export enum NotificationType {
   StreamStarted = 'StreamStarted',
   StreamPaused = 'StreamPaused',
   StreamFinished = 'StreamFinished',
+  StreamIsDue = 'StreamIsDue',
+  StreamContinued = 'StreamContinued',
 }
 
 @Entity()
+@Index(['accountId', 'streamId'])
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -14,6 +17,9 @@ export class Notification {
   @Index()
   @Column()
   accountId: string;
+
+  @Column()
+  streamId: string;
 
   @Column({ type: 'bigint' })
   createdAt: number;
