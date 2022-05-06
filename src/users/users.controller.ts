@@ -3,6 +3,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   Patch,
@@ -39,6 +40,7 @@ export class UsersController {
 
   @ApiBearerAuth()
   @Patch(':accountId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiUnauthorizedResponse({ type: Unauthorized })
   async update(
     @Param('accountId') accountId: string,
