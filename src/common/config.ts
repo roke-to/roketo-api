@@ -1,4 +1,4 @@
-export const ROKETO_CONTRACT_NAME = 'streaming-roketo.dcversus.testnet';
+export const ROKETO_CONTRACT_NAME = 'streaming-r-v2.dcversus.testnet';
 
 export const TESTNET_CONFIG = {
   networkId: 'testnet',
