@@ -21,8 +21,8 @@ export class Notification {
   @Column()
   streamId: string;
 
-  @Column({ type: 'bigint' })
-  createdAt: number;
+  @Column({ type: 'timestamp with time zone' })
+  createdAt: Date;
 
   @Column({ default: false })
   isRead: boolean;
