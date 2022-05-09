@@ -1,8 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { NotificationsService } from './notifications.service';
-import { ReadNotificationDto } from './dto/read-notification.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -15,16 +21,9 @@ export class NotificationsController {
     return this.notificationsService.findAll(req.user.accountId);
   }
 
-  @Patch(':id')
-  markRead(
-    @Req() req,
-    @Param('id') id: string,
-    @Body() readNotificationDto: ReadNotificationDto,
-  ) {
-    return this.notificationsService.markRead(
-      id,
-      req.user.accountId,
-      readNotificationDto,
-    );
+  @Post('readAll')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  markAllRead(@Req() req) {
+    return this.notificationsService.markAllRead(req.user.accountId);
   }
 }

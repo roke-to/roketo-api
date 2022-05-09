@@ -10,7 +10,6 @@ import { ContractService } from '../contract/contract.service';
 import { User } from '../users/user.entity';
 import { RoketoStream, StringStreamStatus } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
-import { ReadNotificationDto } from './dto/read-notification.dto';
 
 const EACH_5_SECONDS = '*/5 * * * * *';
 
@@ -254,20 +253,7 @@ export class NotificationsService {
     return this.notificationsRepository.find({ where: { accountId } });
   }
 
-  async markRead(
-    id: string,
-    accountId: string,
-    readNotificationDto: ReadNotificationDto,
-  ) {
-    const notification = await this.notificationsRepository.preload({
-      id,
-      ...readNotificationDto,
-    });
-
-    if (!notification || notification.accountId !== accountId) {
-      throw new NotFoundException();
-    }
-
-    return this.notificationsRepository.save(notification);
+  markAllRead(accountId: string) {
+    return this.notificationsRepository.update({ accountId }, { isRead: true });
   }
 }
