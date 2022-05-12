@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { connect } from 'near-api-js';
 
-import { TESTNET_CONFIG, ROKETO_CONTRACT_NAME } from '../common/config';
+import { NEAR_CONFIG, ROKETO_CONTRACT_NAME } from '../common/config';
 
 @Injectable()
 export class NearService {
   async getAccount(accountId: string) {
-    const near = await connect(TESTNET_CONFIG);
+    const near = await connect(NEAR_CONFIG);
     return near.account(accountId);
   }
 

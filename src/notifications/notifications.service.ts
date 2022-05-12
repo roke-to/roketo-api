@@ -105,7 +105,7 @@ export class NotificationsService {
     const commonData = {
       accountId,
       streamId: currentStream?.id,
-      createdAt: Date.now(),
+      createdAt: new Date(),
       payload: currentStream,
     };
 
@@ -250,7 +250,11 @@ export class NotificationsService {
   }
 
   async findAll(accountId: string): Promise<Notification[]> {
-    return this.notificationsRepository.find({ where: { accountId } });
+    return this.notificationsRepository.find({
+      where: { accountId },
+      order: { createdAt: 'DESC' },
+      take: 100,
+    });
   }
 
   markAllRead(accountId: string) {
