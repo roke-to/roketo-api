@@ -218,23 +218,22 @@ export class NotificationsService {
 
   private async processUserStreams(user: User, currentStreams: RoketoStream[]) {
     const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.update(
-        User,
-        { accountId: user.accountId },
-        { streams: currentStreams },
-      );
+      const newNotifications = user.streams
+        ? await this.generateNotifications(user, currentStreams)
+        : [];
 
-      if (user.streams) {
-        const newNotifications = await this.generateNotifications(
-          user,
-          currentStreams,
-        );
+      await queryRunner.startTransaction();
 
-        await queryRunner.manager.save(Notification, newNotifications);
-      }
+      await Promise.all([
+        queryRunner.manager.update(
+          User,
+          { accountId: user.accountId },
+          { streams: currentStreams },
+        ),
+        queryRunner.manager.save(Notification, newNotifications),
+      ]);
 
       await queryRunner.commitTransaction();
     } catch (e) {
