@@ -152,12 +152,14 @@ export class NotificationsService {
           .isPositive();
 
         if (streamIsDue) {
-          const dueNotification = await this.findDueNotification(
-            accountId,
-            currentStream.id,
-          );
 
-          if (!dueNotification) {
+          const wasDue =
+            previousStream.wasDue ??
+            (await this.findDueNotification(accountId, currentStream.id));
+
+          if (wasDue) {
+            currentStream.wasDue = true;
+          } else {
             return {
               ...commonData,
               type: NotificationType.StreamIsDue,
