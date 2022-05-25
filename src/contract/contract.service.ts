@@ -31,15 +31,19 @@ export class ContractService implements OnModuleInit {
       limit: 1000000,
     };
 
-    const [incomingResponse, outgoingResponse] = await Promise.all([
-      this.contract.get_account_incoming_streams(params),
-      this.contract.get_account_outgoing_streams(params),
-    ]);
+    try {
+      const [incomingResponse, outgoingResponse] = await Promise.all([
+        this.contract.get_account_incoming_streams(params),
+        this.contract.get_account_outgoing_streams(params),
+      ]);
 
-    return [
-      ...(incomingResponse.Ok || incomingResponse || []),
-      ...(outgoingResponse.Ok || outgoingResponse || []),
-    ];
+      return [
+        ...(incomingResponse.Ok || incomingResponse || []),
+        ...(outgoingResponse.Ok || outgoingResponse || []),
+      ];
+    } catch (userWasntCreatedInContractYet) {
+      return [];
+    }
   }
 
   async getStream(id) {
