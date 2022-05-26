@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
@@ -152,12 +152,14 @@ export class NotificationsService {
           .isPositive();
 
         if (streamIsDue) {
-          const dueNotification = await this.findDueNotification(
-            accountId,
-            currentStream.id,
-          );
 
-          if (!dueNotification) {
+          const wasDue =
+            previousStream.wasDue ??
+            (await this.findDueNotification(accountId, currentStream.id));
+
+          if (wasDue) {
+            currentStream.wasDue = true;
+          } else {
             return {
               ...commonData,
               type: NotificationType.StreamIsDue,
@@ -218,23 +220,22 @@ export class NotificationsService {
 
   private async processUserStreams(user: User, currentStreams: RoketoStream[]) {
     const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.update(
-        User,
-        { accountId: user.accountId },
-        { streams: currentStreams },
-      );
+      const newNotifications = user.streams
+        ? await this.generateNotifications(user, currentStreams)
+        : [];
 
-      if (user.streams) {
-        const newNotifications = await this.generateNotifications(
-          user,
-          currentStreams,
-        );
+      await queryRunner.startTransaction();
 
-        await queryRunner.manager.save(Notification, newNotifications);
-      }
+      await Promise.all([
+        queryRunner.manager.update(
+          User,
+          { accountId: user.accountId },
+          { streams: currentStreams },
+        ),
+        queryRunner.manager.save(Notification, newNotifications),
+      ]);
 
       await queryRunner.commitTransaction();
     } catch (e) {

@@ -30,6 +30,8 @@ export type RoketoStream = {
   token_account_id: AccountId;
   tokens_per_sec: StringInt;
   tokens_total_withdrawn: StringInt;
+
+  wasDue?: true;
 };
 
 type ContractResponse<R> = {
