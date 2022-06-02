@@ -16,7 +16,7 @@ type StreamStatus = StringStreamStatus | { Finished: string };
 export type RoketoStream = {
   amount_to_push: StringInt;
   balance: StringInt;
-  cliff?: StringInt;
+  cliff?: number;
   creator_id: AccountId;
   description: string;
   id: StreamId;
@@ -32,6 +32,7 @@ export type RoketoStream = {
   tokens_total_withdrawn: StringInt;
 
   wasDue?: true;
+  hasPassedCliff?: true;
 };
 
 type ContractResponse<R> = {

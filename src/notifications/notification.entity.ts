@@ -6,6 +6,7 @@ export enum NotificationType {
   StreamFinished = 'StreamFinished',
   StreamIsDue = 'StreamIsDue',
   StreamContinued = 'StreamContinued',
+  StreamCliffPassed = 'StreamCliffPassed',
 }
 
 @Entity()
