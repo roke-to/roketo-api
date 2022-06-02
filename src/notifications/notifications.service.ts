@@ -142,6 +142,14 @@ export class NotificationsService {
       currentStatus === StringStreamStatus.Active &&
       previousStatus === StringStreamStatus.Active
     ) {
+      if (previousStream.wasDue) {
+        currentStream.wasDue = true;
+      }
+
+      if (previousStream.hasPassedCliff) {
+        currentStream.hasPassedCliff = true;
+      }
+
       if (currentStream.receiver_id === accountId) {
         const secondsPassed =
           (Date.now() - Number(currentStream.last_action) / 1e6) / 1000;
@@ -152,20 +160,30 @@ export class NotificationsService {
           .isPositive();
 
         if (streamIsDue) {
-
           const wasDue =
             previousStream.wasDue ??
             (await this.findDueNotification(accountId, currentStream.id));
 
-          if (wasDue) {
+          if (!wasDue) {
             currentStream.wasDue = true;
-          } else {
             return {
               ...commonData,
               type: NotificationType.StreamIsDue,
             };
           }
         }
+      }
+
+      if (
+        currentStream.cliff &&
+        !previousStream.hasPassedCliff &&
+        Date.now() > currentStream.cliff / 1000_000
+      ) {
+        currentStream.hasPassedCliff = true;
+        return {
+          ...commonData,
+          type: NotificationType.StreamCliffPassed,
+        };
       }
     } else if (previousStatus && !currentStream) {
       const currentFinishedStream = await this.contractService.getStream(
