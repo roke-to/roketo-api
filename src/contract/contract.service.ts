@@ -41,8 +41,10 @@ export class ContractService implements OnModuleInit {
         ...(incomingResponse.Ok || incomingResponse || []),
         ...(outgoingResponse.Ok || outgoingResponse || []),
       ];
-    } catch (userWasntCreatedInContractYet) {
-      return [];
+    } catch (error) {
+      console.error(error);
+
+      return null;
     }
   }
 
