@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { Contract } from 'near-api-js';
+import { Contract, providers } from 'near-api-js';
 
 import { NearService } from '../near/near.service';
 import { ROKETO_CONTRACT_NAME } from '../common/config';
@@ -42,7 +42,13 @@ export class ContractService implements OnModuleInit {
         ...(outgoingResponse.Ok || outgoingResponse || []),
       ];
     } catch (error) {
-      console.error(error);
+      if (
+        !(error instanceof providers.TypedError) ||
+        !error.message.match(/\bUnreachableAccount\b/) ||
+        !error.message.match(new RegExp(String.raw`\b${accountId}\b`))
+      ) {
+        console.error(error);
+      }
 
       return null;
     }
