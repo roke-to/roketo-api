@@ -75,7 +75,9 @@ export class NotificationsService {
           user.accountId,
         );
 
-        await this.processUserStreams(user, currentStreams);
+        if (currentStreams) {
+          await this.processUserStreams(user, currentStreams);
+        }
       }),
     );
   }
