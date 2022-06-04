@@ -114,6 +114,22 @@ export class NotificationsService {
     const currentStatus = currentStream?.status;
 
     if (
+      currentStatus === previousStatus &&
+      currentStream?.balance !== previousStream?.balance
+    ) {
+      return {
+        ...commonData,
+        payload: {
+          stream: currentStream,
+          fundsAdded: new BigNumber(currentStream.balance)
+            .minus(previousStream.balance)
+            .toFixed(),
+        },
+        type: NotificationType.StreamFundsAdded,
+      };
+    }
+
+    if (
       (!previousStatus || previousStatus === StringStreamStatus.Initialized) &&
       currentStatus &&
       currentStatus !== StringStreamStatus.Initialized
