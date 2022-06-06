@@ -75,9 +75,7 @@ export class NotificationsService {
           user.accountId,
         );
 
-        if (currentStreams) {
-          await this.processUserStreams(user, currentStreams);
-        }
+        await this.processUserStreams(user, currentStreams);
       }),
     );
   }
@@ -238,23 +236,37 @@ export class NotificationsService {
       .map((dto) => plainToInstance(Notification, dto));
   }
 
-  private async processUserStreams(user: User, currentStreams: RoketoStream[]) {
-    const queryRunner = this.connection.createQueryRunner();
+  private async processUserStreams(
+    user: User,
+    currentStreams: RoketoStream[] | null,
+  ) {
+    const shouldUpdateUser = Boolean(currentStreams) || !user.streams;
 
-    try {
-      const newNotifications = user.streams
+    const newNotifications =
+      user.streams && currentStreams
         ? await this.generateNotifications(user, currentStreams)
         : [];
 
+    const shouldCreateNotifications = newNotifications.length > 0;
+
+    if (!shouldUpdateUser && !shouldCreateNotifications) {
+      return;
+    }
+
+    let queryRunner;
+    try {
+      queryRunner = this.connection.createQueryRunner();
       await queryRunner.startTransaction();
 
       await Promise.all([
-        queryRunner.manager.update(
-          User,
-          { accountId: user.accountId },
-          { streams: currentStreams },
-        ),
-        queryRunner.manager.save(Notification, newNotifications),
+        shouldUpdateUser &&
+          queryRunner.manager.update(
+            User,
+            { accountId: user.accountId },
+            { streams: currentStreams ?? [] },
+          ),
+        shouldCreateNotifications &&
+          queryRunner.manager.save(Notification, newNotifications),
       ]);
 
       await queryRunner.commitTransaction();
@@ -264,9 +276,9 @@ export class NotificationsService {
       this.logger.error('Previous streams', user.streams);
       this.logger.error('Current streams ', currentStreams);
 
-      await queryRunner.rollbackTransaction();
+      await queryRunner?.rollbackTransaction();
     } finally {
-      await queryRunner.release();
+      await queryRunner?.release();
     }
   }
 
