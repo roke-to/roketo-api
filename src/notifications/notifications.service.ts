@@ -106,7 +106,7 @@ export class NotificationsService {
       accountId,
       streamId: currentStream?.id,
       createdAt: new Date(),
-      payload: currentStream,
+      payload: { stream: currentStream },
     };
 
     // Refer to https://www.notion.so/kikimora-labs/ROKETO-56-Notification-s-text-ee6b873ab8a045b1af141fb707678d51
@@ -213,7 +213,7 @@ export class NotificationsService {
         return {
           ...commonData,
           streamId: currentFinishedStream.id,
-          payload: currentFinishedStream,
+          payload: { stream: currentFinishedStream },
           type: NotificationType.StreamFinished,
         };
       }
