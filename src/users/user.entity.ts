@@ -15,6 +15,12 @@ export class User {
   @Column({ nullable: true })
   email: string;
 
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  verificationEmailSentAt: Date;
+
   @Exclude()
   @ApiHideProperty()
   @Column({ type: 'json', nullable: true })
