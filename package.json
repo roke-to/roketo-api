@@ -30,6 +30,7 @@
     "@nestjs/schedule": "^1.1.0",
     "@nestjs/swagger": "^5.2.1",
     "@nestjs/typeorm": "^8.0.3",
+    "@sendgrid/mail": "^7.7.0",
     "@types/passport-jwt": "^3.0.6",
     "bignumber.js": "^9.0.2",
     "class-transformer": "^0.5.1",
