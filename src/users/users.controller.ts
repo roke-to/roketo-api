@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
@@ -51,13 +52,11 @@ export class UsersController {
       throw new ForbiddenException();
     }
 
-    if (Object.keys(body).length !== 0) {
-      if ('email' in body) {
-        Object.assign(body, { isEmailVerified: false });
-      }
-
-      await this.usersService.update(accountId, body);
+    if (Object.keys(body).length === 0) {
+      throw new BadRequestException();
     }
+
+    await this.usersService.update(accountId, body);
   }
 
   @Public()
