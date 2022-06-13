@@ -52,6 +52,10 @@ export class UsersController {
     }
 
     if (Object.keys(body).length !== 0) {
+      if ('email' in body) {
+        Object.assign(body, { isEmailVerified: false });
+      }
+
       await this.usersService.update(accountId, body);
     }
   }
@@ -65,5 +69,22 @@ export class UsersController {
     const url = await this.usersService.getAvatarUrl(accountId);
 
     return res.redirect(HttpStatus.TEMPORARY_REDIRECT, url);
+  }
+
+  @Public()
+  @Get(':accountId/verifyEmail/:jwt')
+  async verifyEmail(
+    @Param('accountId') accountId: string,
+    @Param('jwt') jwt: string,
+    @Res() res: Response,
+  ) {
+    await this.usersService.verifyEmail(accountId, jwt);
+
+    res.redirect(
+      HttpStatus.FOUND,
+      process.env.NEAR_NETWORK_ID === 'mainnet'
+        ? 'https://app2.roke.to'
+        : 'https://app2.test.roke.to',
+    );
   }
 }
