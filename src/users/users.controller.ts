@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Post,
   Req,
   Res,
 } from '@nestjs/common';
@@ -85,5 +86,19 @@ export class UsersController {
         ? 'https://app2.roke.to'
         : 'https://app2.test.roke.to',
     );
+  }
+
+  @ApiBearerAuth()
+  @Post(':accountId/verifyEmail')
+  @ApiUnauthorizedResponse({ type: Unauthorized })
+  async resendVerificationEmail(
+    @Param('accountId') accountId: string,
+    @Req() req,
+  ) {
+    if (req.user.accountId !== accountId) {
+      throw new ForbiddenException();
+    }
+
+    return await this.usersService.resendVerificationEmail(accountId);
   }
 }
