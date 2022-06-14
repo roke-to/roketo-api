@@ -48,7 +48,8 @@ export class UsersService {
       verificationEmailSentAt: null,
     };
 
-    const hasEmailChanged = user.email !== updateUserDto.email;
+    const hasEmailChanged =
+      'email' in updateUserDto && user.email !== updateUserDto.email;
 
     return this.usersRepository.update(accountId, {
       ...updateUserDto,
@@ -57,7 +58,7 @@ export class UsersService {
   }
 
   findAll() {
-    return this.usersRepository.find({ select: ['accountId', 'streams'] });
+    return this.usersRepository.find();
   }
 
   async getAvatarUrl(accountId: string) {
