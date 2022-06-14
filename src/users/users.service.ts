@@ -8,20 +8,11 @@ import { Cron } from '@nestjs/schedule';
 
 import { User } from './user.entity';
 import { UpdateUserDto } from './update-user.dto';
+import { API_HOST, DAPP_HOST } from '../common/config';
 
 const VERIFY_EMAIL_COMMAND = 'verifyEmail';
 
 const EACH_5_SECONDS = '*/5 * * * * *';
-
-const API_HOST =
-  process.env.NEAR_NETWORK_ID === 'mainnet'
-    ? 'https://api.roke.to'
-    : 'https://api.test.roke.to';
-
-const DAPP_HOST =
-  process.env.NEAR_NETWORK_ID === 'mainnet'
-    ? 'https://app2.roke.to'
-    : 'https://app2.test.roke.to';
 
 @Injectable()
 export class UsersService {

@@ -23,6 +23,7 @@ import { UsersService } from './users.service';
 import { Unauthorized } from '../common/dto/unauthorized.dto';
 import { UpdateUserDto } from './update-user.dto';
 import { Public } from '../auth/guards/jwt-auth.guard';
+import { DAPP_HOST } from '../common/config';
 
 @ApiTags('users')
 @Controller('users')
@@ -80,12 +81,7 @@ export class UsersController {
   ) {
     await this.usersService.verifyEmail(accountId, jwt);
 
-    res.redirect(
-      HttpStatus.FOUND,
-      process.env.NEAR_NETWORK_ID === 'mainnet'
-        ? 'https://app2.roke.to'
-        : 'https://app2.test.roke.to',
-    );
+    res.redirect(HttpStatus.FOUND, DAPP_HOST);
   }
 
   @ApiBearerAuth()

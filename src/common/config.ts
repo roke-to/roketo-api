@@ -10,3 +10,13 @@ export const NEAR_CONFIG = {
 
 // TODO: Replace with something idk yet, maybe generate randomly at startup?
 export const JWT_SECRET = 'secretKey2';
+
+export const API_HOST =
+  process.env.NEAR_NETWORK_ID === 'mainnet'
+    ? 'https://api.roke.to'
+    : 'https://api.test.roke.to';
+
+export const DAPP_HOST =
+  process.env.NEAR_NETWORK_ID === 'mainnet'
+    ? 'https://app2.roke.to'
+    : 'https://app2.test.roke.to';
