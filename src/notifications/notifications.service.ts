@@ -1,15 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { plainToInstance } from 'class-transformer';
 import BigNumber from 'bignumber.js';
+import { JwtService } from '@nestjs/jwt';
+import * as SendGrid from '@sendgrid/mail';
 
 import { UsersService } from '../users/users.service';
 import { ContractService } from '../contract/contract.service';
 import { User } from '../users/user.entity';
 import { RoketoStream, StringStreamStatus } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
+import { API_HOST, DAPP_HOST } from '../common/config';
+
+const UNSUBSCRIBE_COMMAND = 'unsubscribe';
 
 const EACH_5_SECONDS = '*/5 * * * * *';
 
@@ -21,6 +26,7 @@ export class NotificationsService {
     private readonly connection: Connection,
     private readonly usersService: UsersService,
     private readonly contractService: ContractService,
+    private readonly jwtService: JwtService,
   ) {}
 
   private readonly logger = new Logger('Cron');
@@ -269,6 +275,18 @@ export class NotificationsService {
       return;
     }
 
+    try {
+      if (user.isEmailVerified && user.allowNotifications) {
+        await Promise.all(
+          newNotifications.map((notification) =>
+            this.sendNotificationEmail(user, notification),
+          ),
+        );
+      }
+    } catch (error) {
+      console.error(`Error sending notification emails`, error);
+    }
+
     let queryRunner;
     try {
       queryRunner = this.connection.createQueryRunner();
@@ -308,5 +326,136 @@ export class NotificationsService {
 
   markAllRead(accountId: string) {
     return this.notificationsRepository.update({ accountId }, { isRead: true });
+  }
+
+  async unsubscribe(accountId: string, jwt: string) {
+    const payload = this.jwtService.decode(jwt);
+
+    if (
+      !payload ||
+      typeof payload !== 'object' ||
+      payload.command !== UNSUBSCRIBE_COMMAND ||
+      payload.accountId !== accountId
+    ) {
+      throw new BadRequestException();
+    }
+
+    const user = await this.usersService.findOne(accountId);
+
+    if (!user) {
+      throw new BadRequestException();
+    }
+
+    return this.usersService.update(accountId, {
+      allowNotifications: false,
+    });
+  }
+
+  getNotificationSubjectAndText(
+    accountId: string,
+    notification: Notification,
+  ): { subject: string; notificationText: string } {
+    const {
+      owner_id: senderId,
+      receiver_id: receiverId,
+      id: streamId,
+    } = notification.payload.stream;
+    const isIncoming = accountId === receiverId;
+
+    switch (notification.type) {
+      case NotificationType.StreamStarted:
+        return {
+          subject: isIncoming
+            ? 'New incoming stream started'
+            : 'New outgoing stream started',
+          notificationText: isIncoming
+            ? `${senderId} started a stream with ID ${streamId} for you to receive.`
+            : `You’ve successfully started a stream to ${receiverId} with ID ${streamId}.`,
+        };
+      case NotificationType.StreamPaused:
+        return {
+          subject: isIncoming
+            ? 'Incoming stream was paused'
+            : 'Outgoing stream was paused',
+          notificationText: isIncoming
+            ? `The incoming stream from ${senderId} with ID ${streamId} was paused.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} was paused.`,
+        };
+      case NotificationType.StreamFinished:
+        return {
+          subject: isIncoming
+            ? 'Incoming stream was finished'
+            : 'Outgoing stream was finished',
+          notificationText: isIncoming
+            ? `The incoming stream from ${senderId} with ID ${streamId} was finished.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} was finished.`,
+        };
+      case NotificationType.StreamContinued:
+        return {
+          subject: isIncoming
+            ? 'Incoming stream was continued'
+            : 'Outgoing stream was continued',
+          notificationText: isIncoming
+            ? `The incoming stream from ${senderId} with ID ${streamId} was continued.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} was continued.`,
+        };
+      case NotificationType.StreamFundsAdded:
+        return {
+          subject: isIncoming
+            ? 'Funds were added to incoming stream'
+            : 'Funds were added to outgoing stream',
+          notificationText: isIncoming
+            ? `Funds were added to the incoming stream from ${senderId} with ID ${streamId}.`
+            : `Funds were added to the outgoing stream to ${receiverId} with ID ${streamId}.`,
+        };
+      case NotificationType.StreamCliffPassed:
+        return {
+          subject: isIncoming
+            ? 'Incoming stream has passed cliff'
+            : 'Outgoing stream has passed cliff',
+          notificationText: isIncoming
+            ? `The incoming stream from ${senderId} with ID ${streamId} has passed cliff.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} has passed cliff.`,
+        };
+      case NotificationType.StreamIsDue:
+        return {
+          subject: isIncoming
+            ? 'Incoming stream is due'
+            : 'Outgoing stream is due',
+          notificationText: isIncoming
+            ? `The incoming stream from ${senderId} with ID ${streamId} is due.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} is due.`,
+        };
+    }
+  }
+
+  async sendNotificationEmail(
+    { name, accountId, email }: User,
+    notification: Notification,
+  ) {
+    const { subject, notificationText } = this.getNotificationSubjectAndText(
+      accountId,
+      notification,
+    );
+
+    const unsubscribePayload = this.jwtService.sign({
+      accountId,
+      email,
+      command: UNSUBSCRIBE_COMMAND,
+    });
+
+    await SendGrid.send({
+      from: { name: 'Roketo notifier', email: 'noreply@roke.to' },
+      to: { name: name || accountId, email },
+      templateId: 'd-22fa8e12064c42c2a1da7d204b5857e5',
+      dynamicTemplateData: {
+        subject: `${subject} [${process.env.NEAR_NETWORK_ID}] @ Roketo`,
+        logoLink: DAPP_HOST,
+        accountId,
+        notificationText,
+        streamLink: `${DAPP_HOST}/#/streams/${notification.payload.stream.id}`,
+        unsubscribeLink: `${API_HOST}/notifications/${accountId}/unsubscribe/${unsubscribePayload}`,
+      },
+    });
   }
 }

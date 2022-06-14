@@ -7,3 +7,10 @@ export const NEAR_CONFIG = {
   headers: {},
   keyStore: 'no' as any,
 };
+
+// TODO: Replace with something idk yet, maybe generate randomly at startup?
+export const JWT_SECRET = 'secretKey2';
+
+export const API_HOST = process.env.API_HOST;
+
+export const DAPP_HOST = process.env.DAPP_HOST;
