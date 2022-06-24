@@ -121,7 +121,7 @@ export class NotificationsService {
 
     if (
       currentStatus === previousStatus &&
-      currentStream?.balance !== previousStream?.balance
+      new BigNumber(currentStream.balance).isGreaterThan(previousStream.balance)
     ) {
       return {
         ...commonData,
