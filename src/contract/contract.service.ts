@@ -28,7 +28,7 @@ export class ContractService implements OnModuleInit {
     const params = {
       account_id: accountId,
       from: 0,
-      limit: 1000000,
+      limit: 500,
     };
 
     try {
