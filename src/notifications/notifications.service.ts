@@ -366,11 +366,11 @@ export class NotificationsService {
       case NotificationType.StreamStarted:
         return {
           subject: isIncoming
-            ? 'New incoming stream started'
-            : 'New outgoing stream started',
+            ? 'New incoming stream created'
+            : 'New outgoing stream created',
           notificationText: isIncoming
-            ? `${senderId} started a stream with ID ${streamId} for you to receive.`
-            : `You’ve successfully started a stream to ${receiverId} with ID ${streamId}.`,
+            ? `${senderId} created a stream with ID ${streamId} to you. Please be ready to receive the stream.`
+            : `You’ve successfully created a stream to ${receiverId} with ID ${streamId}.`,
         };
       case NotificationType.StreamPaused:
         return {
@@ -384,11 +384,11 @@ export class NotificationsService {
       case NotificationType.StreamFinished:
         return {
           subject: isIncoming
-            ? 'Incoming stream was finished'
-            : 'Outgoing stream was finished',
+            ? 'Incoming stream was completed'
+            : 'Outgoing stream was completed',
           notificationText: isIncoming
-            ? `The incoming stream from ${senderId} with ID ${streamId} was finished.`
-            : `The outgoing stream to ${receiverId} with ID ${streamId} was finished.`,
+            ? `The incoming stream from ${senderId} with ID ${streamId} was completed.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} was completed.`,
         };
       case NotificationType.StreamContinued:
         return {
@@ -405,26 +405,26 @@ export class NotificationsService {
             ? 'Funds were added to incoming stream'
             : 'Funds were added to outgoing stream',
           notificationText: isIncoming
-            ? `Funds were added to the incoming stream from ${senderId} with ID ${streamId}.`
-            : `Funds were added to the outgoing stream to ${receiverId} with ID ${streamId}.`,
+            ? `Funds were added to the incoming stream from ${senderId} with ID ${streamId}. The stream will last appropriate time according to the amount of added funds.`
+            : `Funds were added to the outgoing stream to ${receiverId} with ID ${streamId}. The stream will last appropriate time according to the amount of added funds.`,
         };
       case NotificationType.StreamCliffPassed:
         return {
           subject: isIncoming
-            ? 'Incoming stream has passed cliff'
-            : 'Outgoing stream has passed cliff',
+            ? 'Incoming stream has passed cliff period'
+            : 'Outgoing stream has passed cliff period',
           notificationText: isIncoming
-            ? `The incoming stream from ${senderId} with ID ${streamId} has passed cliff.`
-            : `The outgoing stream to ${receiverId} with ID ${streamId} has passed cliff.`,
+            ? `The incoming stream from ${senderId} with ID ${streamId} has passed cliff period.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} has passed cliff period.`,
         };
       case NotificationType.StreamIsDue:
         return {
           subject: isIncoming
-            ? 'Incoming stream is due'
-            : 'Outgoing stream is due',
+            ? 'Incoming stream was finished'
+            : 'Outgoing stream was finished',
           notificationText: isIncoming
-            ? `The incoming stream from ${senderId} with ID ${streamId} is due.`
-            : `The outgoing stream to ${receiverId} with ID ${streamId} is due.`,
+            ? `The incoming stream from ${senderId} with ID ${streamId} was finished.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} was finished.`,
         };
     }
   }
