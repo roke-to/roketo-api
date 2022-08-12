@@ -444,12 +444,14 @@ export class NotificationsService {
       command: UNSUBSCRIBE_COMMAND,
     });
 
+    const networkText = process.env.NEAR_NETWORK_ID !== 'mainnet' ? ' [' + process.env.NEAR_NETWORK_ID + ']' : '';
+
     await SendGrid.send({
       from: { name: 'Roketo notifier', email: 'noreply@roke.to' },
       to: { name: name || accountId, email },
       templateId: 'd-22fa8e12064c42c2a1da7d204b5857e5',
       dynamicTemplateData: {
-        subject: `${subject} [${process.env.NEAR_NETWORK_ID}] @ Roketo`,
+        subject: `${subject}${networkText} @ Roketo`,
         logoLink: DAPP_HOST,
         accountId,
         notificationText,
