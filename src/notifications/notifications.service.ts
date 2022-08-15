@@ -420,11 +420,11 @@ export class NotificationsService {
       case NotificationType.StreamIsDue:
         return {
           subject: isIncoming
-            ? 'Incoming stream was finished'
-            : 'Outgoing stream was finished',
+            ? 'Incoming stream is ready to be fully withdrawn'
+            : 'Outgoing stream is ready to be fully withdrawn',
           notificationText: isIncoming
-            ? `The incoming stream from ${senderId} with ID ${streamId} was finished.`
-            : `The outgoing stream to ${receiverId} with ID ${streamId} was finished.`,
+            ? `The incoming stream from ${senderId} with ID ${streamId} is ready to be fully withdrawn.`
+            : `The outgoing stream to ${receiverId} with ID ${streamId} is ready to be fully withdrawn.`,
         };
     }
   }
