@@ -74,4 +74,4 @@ Feel free to run client API generation script at any point:
 ./generate-and-deploy-api-client.sh
 ```
 
-After that, use the produced API version in `package.json` of frontend app.
+After that, use the produced API version in `package.json` of frontend app and change `VITE_WEB_API_URL` in `.env` file to point at you local backend instance.
