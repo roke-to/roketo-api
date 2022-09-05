@@ -65,7 +65,7 @@ yarn start:dev
 
 ## Mirroring testnet production DB to local DB
 
-To drop all the data from your local DB and mirror testnet DB run the following command: 
+To drop all the data from your local DB and mirror testnet DB run the following command (it should NOT log any errors):
 
 ```bash
 pg_dump --no-privileges --format c --dbname=postgres://wbfowrsvetlpvg:deb9d553b6b888ee55efa391dbb4a1dbbd1c16d6505534ca962359cb04e926cb@ec2-3-211-221-185.compute-1.amazonaws.com:5432/d9jumvarl5n3c | pg_restore --no-owner --clean --if-exists --dbname=$DATABASE_URL
