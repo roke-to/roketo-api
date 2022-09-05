@@ -8,7 +8,7 @@ $ yarn
 
 ## Running locally
 
-### Start local Postgres DB using docker:
+### Prepare local Postgres DB using docker:
 
 Install `docker` and `docker-compose`.
 
@@ -22,6 +22,18 @@ Export DB env variable:
 
 ```bash
 export DATABASE_URL=postgres://postgres:pass123@0.0.0.0/postgres
+```
+
+Build the project before executing migrations:
+
+```bash
+yarn build
+```
+
+Execute all the migrations:
+
+```bash
+yarn migrate
 ```
 
 ### Change TypeORM config for development:
