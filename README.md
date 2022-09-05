@@ -6,28 +6,38 @@
 $ yarn
 ```
 
-## Running the app
+## Running locally
+
+### Start local Postgres DB using docker:
+
+Install `docker` and `docker-compose`.
+
+Start Docker container with Postgres DB:
 
 ```bash
-# development
-$ yarn start
-
-# watch mode
-$ yarn start:dev
-
-# production mode
-$ yarn start:prod
+docker-compose up -d
 ```
 
-## Test
+Export DB env variable:
 
 ```bash
-# unit tests
-$ yarn test
+export DATABASE_URL=postgres://postgres:pass123@0.0.0.0/postgres
+```
 
-# e2e tests
-$ yarn test:e2e
+### Change TypeORM config for development:
 
-# test coverage
-$ yarn test:cov
+In `ormconfig.ts`:
+
+```diff
+-  ssl: {
+-    rejectUnauthorized: false,
+-  },
++  synchronize: true,
++  ssl: false,
+```
+
+Run backend in development mode:
+
+```bash
+yarn start:dev
 ```
