@@ -9,6 +9,7 @@ import * as SendGrid from '@sendgrid/mail';
 
 import { UsersService } from '../users/users.service';
 import { ContractService } from '../contract/contract.service';
+import { ArchiveService } from 'src/archive/archive.service';
 import { User } from '../users/user.entity';
 import { RoketoStream, StringStreamStatus } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
@@ -26,6 +27,7 @@ export class NotificationsService {
     private readonly connection: Connection,
     private readonly usersService: UsersService,
     private readonly contractService: ContractService,
+    private readonly archiveService: ArchiveService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -118,11 +120,11 @@ export class NotificationsService {
     // Refer to https://www.notion.so/kikimora-labs/ROKETO-56-Notification-s-text-ee6b873ab8a045b1af141fb707678d51
     const previousStatus = previousStream?.status;
     const currentStatus = currentStream?.status;
-
     if (
       currentStatus === previousStatus &&
       new BigNumber(currentStream.balance).isGreaterThan(previousStream.balance)
     ) {
+
       return {
         ...commonData,
         payload: {
@@ -216,6 +218,7 @@ export class NotificationsService {
         previousStatus !== StringStreamStatus.Initialized ||
         currentFinishedStream.tokens_total_withdrawn !== '0'
       ) {
+        this.archiveService.create({...commonData});
         return {
           ...commonData,
           streamId: currentFinishedStream.id,
@@ -278,7 +281,7 @@ export class NotificationsService {
     try {
       if (user.isEmailVerified && user.allowNotifications) {
         await Promise.all(
-          newNotifications.map((notification) =>
+          newNotifications.map((notification) => 
             this.sendNotificationEmail(user, notification),
           ),
         );

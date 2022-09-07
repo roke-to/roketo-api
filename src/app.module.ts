@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { NearModule } from './near/near.module';
 import { ContractModule } from './contract/contract.module';
+import { ArchiveModule } from './archive/archive.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ContractModule } from './contract/contract.module';
     ScheduleModule.forRoot(),
     NearModule,
     ContractModule,
+    ArchiveModule
   ],
   controllers: [AppController],
   providers: [AppService],
