@@ -1,7 +1,6 @@
 import { Archive } from './archive.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-// import { JwtService } from '@nestjs/jwt';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -14,13 +13,19 @@ export class ArchiveService {
   async findAll(accountId: string): Promise<Archive[]> {
     return this.archiveRepository.find({
       where: { accountId },
-      order: { createdAt: 'DESC' },
+      order: { startedAt: 'DESC' },
       take: 100,
     });
   }
 
   async create(finishedStream) {
-    const stream = this.archiveRepository.create(finishedStream);
-    await this.archiveRepository.save(stream);
+    const streamId = finishedStream.streamId;
+    const exists =
+      (await this.archiveRepository.count({ where: { streamId } })) > 0;
+
+    if (!exists) {
+      const stream = this.archiveRepository.create(finishedStream);
+      await this.archiveRepository.save(stream);
+    }
   }
 }

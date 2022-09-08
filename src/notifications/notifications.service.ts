@@ -82,6 +82,7 @@ export class NotificationsService {
         const currentStreams = await this.contractService.getStreams(
           user.accountId,
         );
+        // console.log(currentStreams)
 
         await this.processUserStreams(user, currentStreams);
       }),
@@ -218,7 +219,14 @@ export class NotificationsService {
         previousStatus !== StringStreamStatus.Initialized ||
         currentFinishedStream.tokens_total_withdrawn !== '0'
       ) {
-        this.archiveService.create({...commonData});
+        this.archiveService.create({
+          streamId: currentFinishedStream.id,
+          accountId: currentFinishedStream.owner_id,
+          startedAt: new Date(currentFinishedStream.timestamp_created / 1000000),
+          finishedAt: new Date(currentFinishedStream.last_action / 1000000),
+          payload: currentFinishedStream
+        });
+        
         return {
           ...commonData,
           streamId: currentFinishedStream.id,

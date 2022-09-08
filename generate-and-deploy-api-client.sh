@@ -14,7 +14,7 @@ yarn version --patch --no-git-tag-version
 NEXT_VERSION=$(grep -Po "(?<=version\": \")\d+\.\d+\.\d+" package.json)
 
 echo "⭐ Regenerate client"
-npx openapi-generator-cli generate -i ../swagger.json -g typescript --additional-properties=npmName=@roketo/api-client,npmVersion=$NEXT_VERSION,projectName=@roketo/api-client
+npx openapi-generator-cli generate -i ../swagger.json -g typescript --additional-properties=npmName=@roketo/api-client,npmVersion=0.0.32,projectName=@roketo/api-client
 echo node_modules > .gitignore
 yarn
 
@@ -25,8 +25,8 @@ if [ "$CI" ]; then
 fi
 
 git add --all
-git commit -m "Release v$NEXT_VERSION"
-git tag "v$NEXT_VERSION" -m "Release v$NEXT_VERSION"
+git commit -m "Release v0.0.32"
+git tag "v0.0.32" -m "Release v0.0.32"
 git push origin main --follow-tags
 
 echo "⭐ Clean up"

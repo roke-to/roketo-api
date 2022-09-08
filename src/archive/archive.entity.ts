@@ -14,7 +14,10 @@ export class Archive {
   streamId: string;
 
   @Column({ type: 'timestamp with time zone' })
-  createdAt: Date;
+  startedAt: Date;
+  
+  @Column({ type: 'timestamp with time zone' })
+  finishedAt: Date;
 
   @Column({ type: 'json', default: {} })
   payload: Record<string, any>;
