@@ -289,7 +289,7 @@ export class NotificationsService {
     try {
       if (user.isEmailVerified && user.allowNotifications) {
         await Promise.all(
-          newNotifications.map((notification) => 
+          newNotifications.map((notification) =>
             this.sendNotificationEmail(user, notification),
           ),
         );
