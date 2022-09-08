@@ -82,7 +82,6 @@ export class NotificationsService {
         const currentStreams = await this.contractService.getStreams(
           user.accountId,
         );
-        // console.log(currentStreams)
 
         await this.processUserStreams(user, currentStreams);
       }),
@@ -121,11 +120,11 @@ export class NotificationsService {
     // Refer to https://www.notion.so/kikimora-labs/ROKETO-56-Notification-s-text-ee6b873ab8a045b1af141fb707678d51
     const previousStatus = previousStream?.status;
     const currentStatus = currentStream?.status;
+
     if (
       currentStatus === previousStatus &&
       new BigNumber(currentStream.balance).isGreaterThan(previousStream.balance)
     ) {
-
       return {
         ...commonData,
         payload: {
