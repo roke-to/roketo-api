@@ -1,3 +1,4 @@
+import { Archive } from './../archive/archive.entity';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
@@ -218,14 +219,6 @@ export class NotificationsService {
         previousStatus !== StringStreamStatus.Initialized ||
         currentFinishedStream.tokens_total_withdrawn !== '0'
       ) {
-        this.archiveService.create({
-          streamId: currentFinishedStream.id,
-          accountId: currentFinishedStream.owner_id,
-          startedAt: new Date(currentFinishedStream.timestamp_created / 1000000),
-          finishedAt: new Date(currentFinishedStream.last_action / 1000000),
-          payload: currentFinishedStream
-        });
-        
         return {
           ...commonData,
           streamId: currentFinishedStream.id,
@@ -279,7 +272,22 @@ export class NotificationsService {
         ? await this.generateNotifications(user, currentStreams)
         : [];
 
+    let archiveStreams = [];
+
+    newNotifications.map((notification) => {
+      if(notification.type === NotificationType.StreamFinished) {
+        archiveStreams.push({
+          streamId: notification.streamId,
+          accountId: notification.accountId,
+          startedAt: new Date(notification.payload.stream.timestamp_created / 1000000),
+          finishedAt: new Date(notification.payload.stream.last_action / 1000000),
+          payload: notification.payload
+        })
+      }
+    })
+
     const shouldCreateNotifications = newNotifications.length > 0;
+    const shouldCreateArchive = archiveStreams.length > 0;
 
     if (!shouldUpdateUser && !shouldCreateNotifications) {
       return;
@@ -311,6 +319,8 @@ export class NotificationsService {
           ),
         shouldCreateNotifications &&
           queryRunner.manager.save(Notification, newNotifications),
+        shouldCreateArchive && 
+            queryRunner.manager.save(Archive, archiveStreams),
       ]);
 
       await queryRunner.commitTransaction();

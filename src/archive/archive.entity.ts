@@ -1,17 +1,13 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity()
-@Index(['accountId', 'streamId'])
 export class Archive {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+  @PrimaryColumn()
+  streamId: string;
+ 
   @Index()
   @Column()
   accountId: string;
-
-  @Column()
-  streamId: string;
 
   @Column({ type: 'timestamp with time zone' })
   startedAt: Date;
