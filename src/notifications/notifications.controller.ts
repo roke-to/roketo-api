@@ -22,7 +22,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  findAll(@Req() req) {
+  findAllNotifications(@Req() req) {
     return this.notificationsService.findAll(req.user.accountId);
   }
 

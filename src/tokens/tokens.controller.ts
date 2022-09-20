@@ -10,7 +10,7 @@ export class TokensController {
   constructor(private readonly tokensService: TokensService) {}
 
   @Get()
-  findAll(@Req() req) {
+  findAllTokens(@Req() req) {
     return this.tokensService.getTokens(req.user.accountId);
   }
 }
