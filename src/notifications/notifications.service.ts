@@ -444,7 +444,10 @@ export class NotificationsService {
       command: UNSUBSCRIBE_COMMAND,
     });
 
-    const networkText = process.env.NEAR_NETWORK_ID !== 'mainnet' ? ' [' + process.env.NEAR_NETWORK_ID + ']' : '';
+    const networkText =
+      process.env.NEAR_NETWORK_ID !== 'mainnet'
+        ? ` [${process.env.NEAR_NETWORK_ID}]`
+        : '';
 
     await SendGrid.send({
       from: { name: 'Roketo notifier', email: 'noreply@roke.to' },
