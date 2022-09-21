@@ -1,7 +1,7 @@
 import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity()
-export class Archive {
+export class ArchivedStreams {
   @PrimaryColumn()
   streamId: string;
  

@@ -1,4 +1,4 @@
-import { Archive } from './../archive/archive.entity';
+import { ArchivedStreams } from '../archived_streams/archived_streams.entity';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
@@ -10,7 +10,7 @@ import * as SendGrid from '@sendgrid/mail';
 
 import { UsersService } from '../users/users.service';
 import { ContractService } from '../contract/contract.service';
-import { ArchiveService } from 'src/archive/archive.service';
+import { ArchivedStreamsService } from 'src/archived_streams/archived_streams.service';
 import { User } from '../users/user.entity';
 import { RoketoStream, StringStreamStatus } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
@@ -28,7 +28,7 @@ export class NotificationsService {
     private readonly connection: Connection,
     private readonly usersService: UsersService,
     private readonly contractService: ContractService,
-    private readonly archiveService: ArchiveService,
+    private readonly archivedStreamsService: ArchivedStreamsService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -272,22 +272,21 @@ export class NotificationsService {
         ? await this.generateNotifications(user, currentStreams)
         : [];
 
-    let archiveStreams = [];
-
-    newNotifications.map((notification) => {
-      if(notification.type === NotificationType.StreamFinished) {
-        archiveStreams.push({
+    const archivedStreams = newNotifications
+      .filter(({ type }) => type === NotificationType.StreamFinished)
+      .map((notification) => plainToInstance(
+        ArchivedStreams,
+        {
           streamId: notification.streamId,
           accountId: notification.accountId,
           startedAt: new Date(notification.payload.stream.timestamp_created / 1000000),
           finishedAt: new Date(notification.payload.stream.last_action / 1000000),
           payload: notification.payload
-        })
-      }
-    })
+        }
+      ));
 
     const shouldCreateNotifications = newNotifications.length > 0;
-    const shouldCreateArchive = archiveStreams.length > 0;
+    const shouldCreateArchive = archivedStreams.length > 0;
 
     if (!shouldUpdateUser && !shouldCreateNotifications) {
       return;
@@ -320,7 +319,7 @@ export class NotificationsService {
         shouldCreateNotifications &&
           queryRunner.manager.save(Notification, newNotifications),
         shouldCreateArchive && 
-            queryRunner.manager.save(Archive, archiveStreams),
+            queryRunner.manager.save(ArchivedStreams, archivedStreams),
       ]);
 
       await queryRunner.commitTransaction();

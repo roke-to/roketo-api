@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { ContractModule } from '../contract/contract.module';
 import { UsersModule } from '../users/users.module';
-import { ArchiveModule } from './../archive/archive.module';
+import { ArchivedStreamsModule } from '../archived_streams/archived_streams.module';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { Notification } from './notification.entity';
@@ -18,7 +18,7 @@ import { JWT_SECRET } from '../common/config';
     }),
     UsersModule,
     ContractModule,
-    ArchiveModule,
+    ArchivedStreamsModule,
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService],

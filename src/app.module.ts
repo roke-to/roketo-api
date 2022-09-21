@@ -8,7 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { NearModule } from './near/near.module';
 import { ContractModule } from './contract/contract.module';
-import { ArchiveModule } from './archive/archive.module';
+import { ArchivedStreamsModule } from './archived_streams/archived_streams.module';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { ArchiveModule } from './archive/archive.module';
     ScheduleModule.forRoot(),
     NearModule,
     ContractModule,
-    ArchiveModule
+    ArchivedStreamsModule
   ],
   controllers: [AppController],
   providers: [AppService],
