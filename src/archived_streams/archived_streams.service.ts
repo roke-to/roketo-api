@@ -1,16 +1,16 @@
-import { ArchivedStreams } from './archived_streams.entity';
+import { ArchivedStream } from './archived_stream.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ArchivedStreamsService {
   constructor(
-    @InjectRepository(ArchivedStreams)
-    private readonly archivedStreamsRepository: Repository<ArchivedStreams>,
+    @InjectRepository(ArchivedStream)
+    private readonly archivedStreamsRepository: Repository<ArchivedStream>,
   ) {}
 
-  async findAll(accountId: string): Promise<ArchivedStreams[]> {
+  async findAll(accountId: string): Promise<ArchivedStream[]> {
     return this.archivedStreamsRepository.find({
       where: { accountId },
       order: { startedAt: 'DESC' },

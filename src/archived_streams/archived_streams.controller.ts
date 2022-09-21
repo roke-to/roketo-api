@@ -9,7 +9,7 @@ export class ArchivedStreamsController {
   constructor(private readonly archiveService: ArchivedStreamsService) {}
 
   @Get()
-  findAll(@Req() req) {
+  findArchivedStreams(@Req() req) {
     return this.archiveService.findAll(req.user.accountId);
   }
 }

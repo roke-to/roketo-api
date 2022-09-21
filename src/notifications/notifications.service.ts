@@ -1,4 +1,4 @@
-import { ArchivedStreams } from '../archived_streams/archived_streams.entity';
+import { ArchivedStream } from '../archived_streams/archived_stream.entity';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
@@ -10,7 +10,6 @@ import * as SendGrid from '@sendgrid/mail';
 
 import { UsersService } from '../users/users.service';
 import { ContractService } from '../contract/contract.service';
-import { ArchivedStreamsService } from 'src/archived_streams/archived_streams.service';
 import { User } from '../users/user.entity';
 import { RoketoStream, StringStreamStatus } from '../common/contract.types';
 import { Notification, NotificationType } from './notification.entity';
@@ -28,7 +27,6 @@ export class NotificationsService {
     private readonly connection: Connection,
     private readonly usersService: UsersService,
     private readonly contractService: ContractService,
-    private readonly archivedStreamsService: ArchivedStreamsService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -275,7 +273,7 @@ export class NotificationsService {
     const archivedStreams = newNotifications
       .filter(({ type }) => type === NotificationType.StreamFinished)
       .map((notification) => plainToInstance(
-        ArchivedStreams,
+        ArchivedStream,
         {
           streamId: notification.streamId,
           accountId: notification.accountId,
@@ -319,7 +317,7 @@ export class NotificationsService {
         shouldCreateNotifications &&
           queryRunner.manager.save(Notification, newNotifications),
         shouldCreateArchive && 
-            queryRunner.manager.save(ArchivedStreams, archivedStreams),
+            queryRunner.manager.save(ArchivedStream, archivedStreams),
       ]);
 
       await queryRunner.commitTransaction();
