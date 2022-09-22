@@ -1,3 +1,4 @@
+import { ArchivedStream } from '../archived_streams/archived_stream.entity';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
@@ -269,7 +270,21 @@ export class NotificationsService {
         ? await this.generateNotifications(user, currentStreams)
         : [];
 
+    const archivedStreams = newNotifications
+      .filter(({ type }) => type === NotificationType.StreamFinished)
+      .map((notification) => plainToInstance(
+        ArchivedStream,
+        {
+          streamId: notification.streamId,
+          accountId: notification.accountId,
+          startedAt: new Date(notification.payload.stream.timestamp_created / 1000000),
+          finishedAt: new Date(notification.payload.stream.last_action / 1000000),
+          payload: notification.payload
+        }
+      ));
+
     const shouldCreateNotifications = newNotifications.length > 0;
+    const shouldCreateArchive = archivedStreams.length > 0;
 
     if (!shouldUpdateUser && !shouldCreateNotifications) {
       return;
@@ -301,6 +316,8 @@ export class NotificationsService {
           ),
         shouldCreateNotifications &&
           queryRunner.manager.save(Notification, newNotifications),
+        shouldCreateArchive && 
+            queryRunner.manager.save(ArchivedStream, archivedStreams),
       ]);
 
       await queryRunner.commitTransaction();
