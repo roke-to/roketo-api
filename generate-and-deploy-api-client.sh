@@ -11,7 +11,7 @@ cd roketo-api-client
 
 echo "⭐ Get next version"
 yarn version --patch --no-git-tag-version
-NEXT_VERSION=$(grep -Po "(?<=version\": \")\d+\.\d+\.\d+" package.json)
+NEXT_VERSION=$(node -pe "require('./package.json').version")
 
 echo "⭐ Regenerate client"
 npx openapi-generator-cli generate -i ../swagger.json -g typescript --additional-properties=npmName=@roketo/api-client,npmVersion=$NEXT_VERSION,projectName=@roketo/api-client
