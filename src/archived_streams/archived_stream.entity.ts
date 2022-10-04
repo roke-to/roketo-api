@@ -1,8 +1,12 @@
-import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
+import { RoketoStream } from 'src/common/contract.types';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class ArchivedStream {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
   streamId: string;
  
   @Index()
@@ -16,5 +20,7 @@ export class ArchivedStream {
   finishedAt: Date;
 
   @Column({ type: 'json', default: {} })
-  payload: Record<string, any>;
+  payload: {
+    stream: RoketoStream
+  };
 }
