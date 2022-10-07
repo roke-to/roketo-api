@@ -102,3 +102,16 @@ Feel free to run client API generation script at any point:
 ```
 
 After that, use the produced API version in `package.json` of frontend app and change `VITE_WEB_API_URL` in `.env` file to point at you local backend instance.
+
+
+## Run on docker
+
+```
+# Build image with current
+docker build .
+docker images
+# REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
+# <none>       <none>    9d1b89be622a   2 minutes ago   405MB
+
+docker run -p 4001:3000 --env DATABASE_URL="postgres://rocket:bkjyvfcr,eltn;bnm@34.163.1.233:8084/rocketdb" --env DISABLE_DATABASE_SSL=true 9d1b89be622a
+```

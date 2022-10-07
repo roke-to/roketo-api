@@ -6,7 +6,7 @@ FROM node:${NODE_VERSION} As base
 WORKDIR /usr/src/app
 
 # install dependencies
-COPY ["package.json", "yarn.lock", "./"]
+COPY ["package.json", "yarn.lock", "ormconfig.ts", "nest-cli.json", "./"]
 RUN yarn --pure-lockfile
 
 # STAGE 2
@@ -29,10 +29,15 @@ ENV NODE_ENV=${NODE_ENV}
 
 WORKDIR /usr/src/app
 
+ENV DATABASE_URL=${DATABASE_URL}
+ENV DISABLE_DATABASE_SSL=${DISABLE_DATABASE_SSL}
+
 # copy from build image
+COPY --from=build /usr/src/app/package.json ./package.json
+COPY --from=build /usr/src/app/docker-start.sh ./docker-start.sh
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 
 
 # TODO: remove orm config and fix path
-CMD [ "node", "dist/src/main" ]
+CMD [ "./docker-start.sh" ]

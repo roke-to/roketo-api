@@ -1,10 +1,26 @@
-version: "3"
-
+version: '3.3'
 services:
-  db:
-    image: postgres
-    restart: always
-    ports:
-      - "5432:5432"
+  uiapi:
+    image: gcr.io/main-project-354317/${APP?Variable not set}:${APP_TAG}
+    container_name: ${APP_NAME}
+    networks:
+      - proxy
     environment:
-      POSTGRES_PASSWORD: pass123
+      - DATABASE_URL=${DB_CONNSTRING}
+      - DISABLE_DATABASE_SSL=true
+      - ROKETO_CONTRACT_NAME=streaming-r-v2.dcversus.testnet
+      - NEAR_NETWORK_ID=testnet
+      - NEAR_NODE_URL=https://rpc.testnet.near.org
+      - NEAR_WALLET_URL=https://wallet.testnet.near.org
+      - API_HOST=https://api.test.roke.to
+      - DAPP_HOST=https://app2.test.roke.to
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.${APP_NAME}.loadbalancer.server.port=3000"
+      - "traefik.http.routers.${APP_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.${APP_NAME}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${APP_NAME}.rule=Host(`${APP_HOSTNAME}`, `www.${APP_HOSTNAME}`)"
+networks:
+  proxy:
+    external:
+      name: "traefik-global-proxy"

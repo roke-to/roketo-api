@@ -20,7 +20,7 @@ import { ArchivedStreamsModule } from './archived_streams/archived_streams.modul
     NearModule,
     ContractModule,
     TokensModule,
-    ArchivedStreamsModule
+    ArchivedStreamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
