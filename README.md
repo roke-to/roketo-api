@@ -115,3 +115,25 @@ docker images
 
 docker run -p 4001:3000 --env DATABASE_URL="postgres://rocket:bkjyvfcr,eltn;bnm@34.163.1.233:8084/rocketdb" --env DISABLE_DATABASE_SSL=true 9d1b89be622a
 ```
+
+Testnet env vars
+
+```yml
+- ROKETO_CONTRACT_NAME=streaming-r-v2.dcversus.testnet
+- NEAR_NETWORK_ID=testnet
+- NEAR_NODE_URL=https://rpc.testnet.near.org
+- NEAR_WALLET_URL=https://wallet.testnet.near.org
+- API_HOST=https://api.test.roke.to
+- DAPP_HOST=https://app2.test.roke.to
+```
+
+Prod env vars
+
+```yml
+- ROKETO_CONTRACT_NAME=streaming.r-v2.near
+- NEAR_NETWORK_ID=mainnet
+- NEAR_NODE_URL=https://rpc.mainnet.near.org
+- NEAR_WALLET_URL=https://wallet.near.org
+- API_HOST=https://api.roke.to
+- DAPP_HOST=https://app2.roke.to
+```
