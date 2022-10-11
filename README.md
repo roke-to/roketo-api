@@ -102,3 +102,38 @@ Feel free to run client API generation script at any point:
 ```
 
 After that, use the produced API version in `package.json` of frontend app and change `VITE_WEB_API_URL` in `.env` file to point at you local backend instance.
+
+
+## Run on docker
+
+```
+# Build image with current
+docker build .
+docker images
+# REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
+# <none>       <none>    9d1b89be622a   2 minutes ago   405MB
+
+docker run -p 4001:3000 --env DATABASE_URL="postgres://rocket:bkjyvfcr,eltn;bnm@34.163.1.233:8084/rocketdb" --env DISABLE_DATABASE_SSL=true 9d1b89be622a
+```
+
+Testnet env vars
+
+```yml
+- ROKETO_CONTRACT_NAME=streaming-r-v2.dcversus.testnet
+- NEAR_NETWORK_ID=testnet
+- NEAR_NODE_URL=https://rpc.testnet.near.org
+- NEAR_WALLET_URL=https://wallet.testnet.near.org
+- API_HOST=https://api.test.roke.to
+- DAPP_HOST=https://app2.test.roke.to
+```
+
+Prod env vars
+
+```yml
+- ROKETO_CONTRACT_NAME=streaming.r-v2.near
+- NEAR_NETWORK_ID=mainnet
+- NEAR_NODE_URL=https://rpc.mainnet.near.org
+- NEAR_WALLET_URL=https://wallet.near.org
+- API_HOST=https://api.roke.to
+- DAPP_HOST=https://app2.roke.to
+```
