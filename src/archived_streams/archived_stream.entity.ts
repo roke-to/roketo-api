@@ -1,5 +1,6 @@
-import { RoketoStream } from 'src/common/contract.types';
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+
+import { RoketoStream } from '../common/stream.dto';
 
 @Entity()
 export class ArchivedStream {
@@ -8,14 +9,14 @@ export class ArchivedStream {
 
   @Column()
   streamId: string;
- 
+
   @Index()
   @Column()
   accountId: string;
 
   @Column({ type: 'timestamp with time zone' })
   startedAt: Date;
-  
+
   @Column({ type: 'timestamp with time zone' })
   finishedAt: Date;
 

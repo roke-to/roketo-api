@@ -2,7 +2,7 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 import { Exclude, instanceToPlain } from 'class-transformer';
 import { ApiHideProperty } from '@nestjs/swagger';
 
-import type { RoketoStream } from '../common/contract.types';
+import type { RoketoStream } from '../common/stream.dto';
 
 @Entity()
 export class User {
