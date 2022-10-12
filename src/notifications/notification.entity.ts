@@ -1,6 +1,5 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
-
-import { RoketoStream } from '../common/stream.dto';
+import { RoketoStream } from 'src/common/stream.dto';
 
 export enum NotificationType {
   StreamStarted = 'StreamStarted',
