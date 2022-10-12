@@ -1,13 +1,10 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 
 import { RoketoStream } from '../common/stream.dto';
 
 @Entity()
 export class ArchivedStream {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
+  @PrimaryColumn()
   streamId: string;
 
   @Index()

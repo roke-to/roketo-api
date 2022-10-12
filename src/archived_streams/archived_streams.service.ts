@@ -12,10 +12,10 @@ export class ArchivedStreamsService {
 
   async findAll(accountId: string): Promise<ArchivedStream[]> {
     return this.archivedStreamsRepository.find({
-      where: { 
-        accountId, 
-        receiverId: accountId 
-      },
+      where: [
+        { accountId },
+        { receiverId: accountId }
+      ],
       order: { startedAt: 'DESC' },
       take: 100,
     });
