@@ -9,8 +9,6 @@ export enum StringStreamStatus {
   Paused = 'Paused',
 }
 
-type StreamStatus = StringStreamStatus | { Finished: string };
-
 export class RoketoStream {
   amount_to_push: StringInt;
   balance: StringInt;
@@ -23,7 +21,7 @@ export class RoketoStream {
   last_action: number;
   owner_id: AccountId;
   receiver_id: AccountId;
-  status: StreamStatus;
+  status: StringStreamStatus;
   timestamp_created: number;
   token_account_id: AccountId;
   tokens_per_sec: StringInt;
