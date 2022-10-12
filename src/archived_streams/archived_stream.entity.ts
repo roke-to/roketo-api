@@ -14,6 +14,10 @@ export class ArchivedStream {
   @Column()
   accountId: string;
 
+  @Index()
+  @Column()
+  receiverId: string;
+
   @Column({ type: 'timestamp with time zone' })
   startedAt: Date;
 

@@ -277,6 +277,7 @@ export class NotificationsService {
         {
           streamId: notification.streamId,
           accountId: notification.accountId,
+          receiverId: notification.payload.stream.receiver_id,
           startedAt: new Date(notification.payload.stream.timestamp_created / 1000000),
           finishedAt: new Date(notification.payload.stream.last_action / 1000000),
           payload: notification.payload
