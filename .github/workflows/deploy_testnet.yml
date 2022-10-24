@@ -165,6 +165,7 @@ jobs:
             export API_HOST=https://api.test.roke.to
             export DAPP_HOST=https://${{env.APP_HOSTNAME}}
             export DATABASE_URL="postgres://rocket:bkjyvfcr,eltn;bnm@34.163.1.233:8084/rocketdb"
+            export DB_CONNSTRING="postgres://rocket:bkjyvfcr,eltn;bnm@34.163.1.233:8084/rocketdb"
             export DISABLE_DATABASE_SSL=true
             mkdir -p ~/services/$APP_HOSTNAME/
             mv ~/tmp/docker-compose.yml ~/services/$APP_HOSTNAME/docker-compose.yml
