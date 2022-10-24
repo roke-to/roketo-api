@@ -1,7 +1,7 @@
 import {MigrationInterface, QueryRunner} from "typeorm";
 
-export class ChangeArchivedStreamsColumns1665586025429 implements MigrationInterface {
-    name = 'ChangeArchivedStreamsColumns1665586025429'
+export class ChangeArchivedStreamsColumns1666594954727 implements MigrationInterface {
+    name = 'ChangeArchivedStreamsColumns1666594954727'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`ALTER TABLE "archived_stream" ADD "receiverId" character varying NOT NULL`);
