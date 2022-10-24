@@ -141,7 +141,7 @@ jobs:
           username: ${{ secrets.ROKETO_DEPLOYER_USER }}
           key: ${{ secrets.ROKETO_DEPLOYER_KEY }}
           port: 22
-          source: "./docker-compose.yaml"
+          source: "./docker-compose.yml"
           target: "~/tmp/"
       - name: deploy
         uses: fifsky/ssh-action@master
@@ -167,9 +167,9 @@ jobs:
             export DATABASE_URL="postgres://rocket:bkjyvfcr,eltn;bnm@34.163.1.233:8084/rocketdb"
             export DISABLE_DATABASE_SSL=true
             mkdir -p ~/services/$APP_HOSTNAME/
-            mv ~/tmp/docker-compose.yaml ~/services/$APP_HOSTNAME/docker-compose.yaml
+            mv ~/tmp/docker-compose.yml ~/services/$APP_HOSTNAME/docker-compose.yml
             cd ~/services/$APP_HOSTNAME
-            docker-compose up -d
+            docker compose up -d
             export text='service '$APP_NAME' updated with url: '$APP_HOSTNAME
             . ~/services/sucess.sh
           host: germes.roke.to
