@@ -154,7 +154,7 @@ jobs:
         with:
           command: |
             export APP=${{env.APP}}
-            export APP_HOSTNAME=${{env.APP_HOSTNAME}}
+            export APP_HOSTNAME=api.test.roke.to
             export APP_NAME=${{env.APP_NAME}}
             export APP_TAG=${{env.APP_TAG}}
             export REG=${{ matrix.registry }}
