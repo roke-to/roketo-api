@@ -44,7 +44,7 @@ export class NotificationsService {
     });
   }
 
-  @Cron(EACH_5_SECONDS)
+  // @Cron(EACH_5_SECONDS)
   private async generateIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams, skipped.');
@@ -316,7 +316,7 @@ export class NotificationsService {
           ),
         shouldCreateNotifications &&
           queryRunner.manager.save(Notification, newNotifications),
-        shouldCreateArchive && 
+        shouldCreateArchive &&
             queryRunner.manager.save(ArchivedStream, archivedStreams),
       ]);
 
