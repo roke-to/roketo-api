@@ -160,13 +160,14 @@ jobs:
             export NEAR_WALLET_URL=https://wallet.near.org
             export API_HOST=https://api.roke.to
             export DAPP_HOST=https://app2.roke.to
-            export DATABASE_URL="postgres://cvpjetjjmkaecv:93c5649f1a46ed05b30856e5a186252b5893b813fd3b2833d210dc2882dcff24@ec2-34-247-72-29.eu-west-1.compute.amazonaws.com:5432/dc3huo59unqrpm"
-            export DB_CONNSTRING="postgres://cvpjetjjmkaecv:93c5649f1a46ed05b30856e5a186252b5893b813fd3b2833d210dc2882dcff24@ec2-34-247-72-29.eu-west-1.compute.amazonaws.com:5432/dc3huo59unqrpm"
+            export DATABASE_URL="postgres://mainuser:ltkfqhfjnescnhtt@34.67.148.83:5432/roketo"
+            export DB_CONNSTRING="postgres://mainuser:ltkfqhfjnescnhtt@34.67.148.83:5432/roketo"
             export DISABLE_DATABASE_SSL=true
             mkdir -p ~/services/$APP_HOSTNAME/
             mv ~/tmp/docker-compose.yml ~/services/$APP_HOSTNAME/docker-compose.yml
             cd ~/services/$APP_HOSTNAME
-            docker compose up -d
+            docker-compose down
+            docker-compose up -d
             export text='service '$APP_NAME' updated with url: '$APP_HOSTNAME
             . ~/services/sucess.sh
           host: ares.roke.to
