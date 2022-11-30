@@ -1,5 +1,6 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Controller, Param, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/auth/guards/jwt-auth.guard';
 
 import { TokensService } from './tokens.service';
 
@@ -9,8 +10,15 @@ import { TokensService } from './tokens.service';
 export class TokensController {
   constructor(private readonly tokensService: TokensService) {}
 
-  @Get()
-  findAllTokens(@Req() req) {
-    return this.tokensService.getTokens(req.user.accountId);
+  @Public()
+  @Get('fts/:accountId')
+  findAllTokens(@Param('accountId') accountId: string) {
+    return this.tokensService.getTokens(accountId);
+  }
+  
+  @Public()
+  @Get('nfts/:accountId')
+  findAllTFTs(@Param('accountId') accountId: string) {
+    return this.tokensService.getNFTs(accountId);
   }
 }

@@ -3,18 +3,26 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pool } from 'pg';
 
-import { UserFTs } from './userFTs.entity';
+import { UserFt } from './entitites/userFT.entity';
+import { UserNft } from './entitites/userNFT.entity';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class TokensService {
+  private readonly pool = new Pool({
+    connectionString:
+      'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
+  });
+
   constructor(
-    @InjectRepository(UserFTs)
-    private readonly userFTsRepository: Repository<UserFTs>,
+    @InjectRepository(UserFt)
+    private readonly userFTRepository: Repository<UserFt>,
+    @InjectRepository(UserNft)
+    private readonly userNFTRepository: Repository<UserNft>,
   ) {}
 
   async getTokens(accountId: string) {
-    const userFTs = await this.userFTsRepository.preload({
+    const userFTs = await this.userFTRepository.preload({
       accountId,
     });
 
@@ -29,29 +37,93 @@ export class TokensService {
       ? Array.from(new Set([...userFTs.list, ...list]))
       : list;
 
-    const updatedUserFTs = plainToInstance(UserFTs, {
+    const updatedUserFTs = plainToInstance(UserFt, {
       accountId,
       list: mergedList,
       blockTimestamp: lastBlockTimestamp,
     });
 
-    await this.userFTsRepository.save(updatedUserFTs);
+    await this.userFTRepository.save(updatedUserFTs);
 
     return updatedUserFTs.list;
   }
 
-  private async findLastBlockByTimestamp() {
-    const pool = new Pool({
-      connectionString:
-        'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
+  async getNFTs(accountId: string) {
+    const userNFTs = await this.userNFTRepository.preload({
+      accountId,
     });
 
+    const blockTimestamp = Number(userNFTs?.blockTimestamp ?? '0');
+
+    const { lastBlockTimestamp, list } = await this.findlikelyNFTsFromBlock(
+      accountId,
+      blockTimestamp,
+    );
+
+    const mergedList = userNFTs
+      ? Array.from(new Set([...userNFTs.list, ...list]))
+      : list;
+
+    const updatedUserNFTs = plainToInstance(UserNft, {
+      accountId,
+      list: mergedList,
+      blockTimestamp: lastBlockTimestamp,
+    });
+
+    await this.userNFTRepository.save(updatedUserNFTs);
+
+    return updatedUserNFTs.list;
+  }
+
+  private async findLastBlockByTimestamp() {
     const {
       rows: [lastBlock],
-    } = await pool.query(
+    } = await this.pool.query(
       'select block_timestamp FROM blocks ORDER BY block_timestamp DESC LIMIT 1',
     );
     return lastBlock;
+  }
+
+  private async findlikelyNFTsFromBlock(
+    accountId: string,
+    fromBlockTimestamp: number,
+  ) {
+    const { block_timestamp: lastBlockTimestamp } =
+      await this.findLastBlockByTimestamp();
+
+      const ownershipChangeFunctionCalls = `
+          select distinct receipt_receiver_account_id as receiver_account_id
+          from action_receipt_actions
+          where args->'args_json'->>'receiver_id' = $1
+              and action_kind = 'FUNCTION_CALL'
+              and args->>'args_json' is not null
+              and args->>'method_name' like 'nft_%'
+              and receipt_included_in_block_timestamp <= $2
+              and receipt_included_in_block_timestamp > $3
+      `;
+  
+      const ownershipChangeEvents = `
+          select distinct emitted_by_contract_account_id as receiver_account_id 
+          from assets__non_fungible_token_events
+          where token_new_owner_account_id = $1
+              and emitted_at_block_timestamp <= $2
+              and emitted_at_block_timestamp > $3
+      `;
+
+      const { rows } = await this.pool.query(
+        [ownershipChangeFunctionCalls, ownershipChangeEvents].join(
+          ' union '
+        ), 
+        [
+          accountId, 
+          lastBlockTimestamp, 
+          fromBlockTimestamp
+        ]);
+
+      return {
+        lastBlockTimestamp: Number(lastBlockTimestamp),
+        list: rows.map(({ receiver_account_id }) => receiver_account_id),
+      };
   }
 
   private async findLikelyTokensFromBlock(
@@ -103,12 +175,7 @@ export class TokensService {
             and emitted_at_block_timestamp > $4
     `;
 
-    const pool = new Pool({
-      connectionString:
-        'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
-    });
-
-    const { rows } = await pool.query(
+    const { rows } = await this.pool.query(
       [received, mintedWithBridge, calledByUser, ownershipChangeEvents].join(
         ' union ',
       ),
@@ -119,8 +186,6 @@ export class TokensService {
         fromBlockTimestamp,
       ],
     );
-
-    pool.end();
 
     return {
       lastBlockTimestamp: Number(lastBlockTimestamp),
