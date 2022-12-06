@@ -18,7 +18,7 @@ export class TokensController {
   
   @Public()
   @Get('nfts/:accountId')
-  findAllTFTs(@Param('accountId') accountId: string) {
+  findAllNFTs(@Param('accountId') accountId: string) {
     return this.tokensService.getNFTs(accountId);
   }
 }
