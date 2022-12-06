@@ -92,8 +92,9 @@ export class TokensService {
       await this.findLastBlockByTimestamp();
 
       const ownershipChangeFunctionCalls = `
-          select distinct receipt_receiver_account_id as receiver_account_id
+          select distinct receipt_receiver_account_id as receiver_account_id, events.token_id as token_id
           from action_receipt_actions
+          join assets__non_fungible_token_events as events on emitted_by_contract_account_id = $1
           where args->'args_json'->>'receiver_id' = $1
               and action_kind = 'FUNCTION_CALL'
               and args->>'args_json' is not null
@@ -103,7 +104,7 @@ export class TokensService {
       `;
   
       const ownershipChangeEvents = `
-          select distinct emitted_by_contract_account_id as receiver_account_id 
+          select distinct emitted_by_contract_account_id as receiver_account_id, token_id
           from assets__non_fungible_token_events
           where token_new_owner_account_id = $1
               and emitted_at_block_timestamp <= $2
@@ -122,7 +123,12 @@ export class TokensService {
 
       return {
         lastBlockTimestamp: Number(lastBlockTimestamp),
-        list: rows.map(({ receiver_account_id }) => receiver_account_id),
+        list: rows.map(({ receiver_account_id, token_id }) => {
+          return {
+            receiver_account_id, 
+            token_id
+          }
+        }),
       };
   }
 
