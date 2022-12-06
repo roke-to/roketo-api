@@ -2,7 +2,7 @@ import { Controller, Get, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ArchivedStreamsService } from './archived_streams.service';
 
-@ApiTags('archives_streams')
+@ApiTags('archived_streams')
 @ApiBearerAuth()
 @Controller('archived_streams')
 export class ArchivedStreamsController {

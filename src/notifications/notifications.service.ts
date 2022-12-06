@@ -11,7 +11,7 @@ import * as SendGrid from '@sendgrid/mail';
 import { UsersService } from '../users/users.service';
 import { ContractService } from '../contract/contract.service';
 import { User } from '../users/user.entity';
-import { RoketoStream, StringStreamStatus } from '../common/contract.types';
+import { RoketoStream, StringStreamStatus } from '../common/stream.dto';
 import { Notification, NotificationType } from './notification.entity';
 import { API_HOST, DAPP_HOST } from '../common/config';
 
@@ -276,7 +276,8 @@ export class NotificationsService {
         ArchivedStream,
         {
           streamId: notification.streamId,
-          accountId: notification.accountId,
+          accountId: notification.payload.stream.owner_id,
+          receiverId: notification.payload.stream.receiver_id,
           startedAt: new Date(notification.payload.stream.timestamp_created / 1000000),
           finishedAt: new Date(notification.payload.stream.last_action / 1000000),
           payload: notification.payload

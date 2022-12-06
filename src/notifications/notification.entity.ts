@@ -1,4 +1,5 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { RoketoStream } from 'src/common/stream.dto';
 
 export enum NotificationType {
   StreamStarted = 'StreamStarted',
@@ -33,5 +34,8 @@ export class Notification {
   type: NotificationType;
 
   @Column({ type: 'json', default: {} })
-  payload: Record<string, any>;
+  payload: {
+    stream: RoketoStream;
+    fundsAdded?: string;
+  };
 }
