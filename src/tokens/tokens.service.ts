@@ -6,6 +6,7 @@ import { Pool } from 'pg';
 import { UserFt } from './entitites/userFT.entity';
 import { UserNft } from './entitites/userNFT.entity';
 import { plainToInstance } from 'class-transformer';
+import { RoketoStream, StringStreamStatus } from 'src/common/stream.dto';
 
 @Injectable()
 export class TokensService {
@@ -197,5 +198,48 @@ export class TokensService {
       lastBlockTimestamp: Number(lastBlockTimestamp),
       list: rows.map(({ receiver_account_id }) => receiver_account_id),
     };
+  }
+
+  async findAllNftTransactions(accountId: string): Promise<RoketoStream[]> {
+    const receiverId = 'vault.vengone.testnet';
+
+    const query = `
+        select action_receipt_actions.*, execution_outcomes.*, receipts.* from action_receipt_actions 
+          JOIN execution_outcomes ON execution_outcomes.receipt_id = action_receipt_actions.receipt_id
+          LEFT JOIN receipts ON execution_outcomes.receipt_id = receipts.receipt_id
+          where action_receipt_actions.receipt_receiver_account_id = $1
+            and action_receipt_actions.args->'args_json'->>'sender_id' = $2
+            and action_receipt_actions.action_kind = 'FUNCTION_CALL'
+            and action_receipt_actions.args->>'args_json' is not null
+            and execution_outcomes.status = 'SUCCESS_VALUE' 
+      `;
+
+    const { rows } = await this.pool.query(query, [receiverId, accountId]);
+
+    const roketoStreams = rows.map((stream: any) => {
+      const parsedMsg = JSON.parse(JSON.parse(`"${stream.args.args_json.msg}"`));
+
+      return plainToInstance(
+        RoketoStream,
+        {
+          balance: stream.args.args_json.amount || '',
+          creator_id: accountId || null,
+          description: null,
+          id: stream.originated_from_transaction_hash || '',
+          is_expirable: true,
+          is_locked: false,
+          last_action: stream.executed_in_block_timestamp || null,
+          owner_id: accountId,
+          receiver_id: parsedMsg.nft_contract_id || null,
+          status: StringStreamStatus.Initialized,
+          timestamp_created: stream.executed_in_block_timestamp || null,
+          token_account_id: stream.receipt_predecessor_account_id || null,
+          tokens_per_sec: '',
+          tokens_total_withdrawn: '',
+        }
+      )
+    });
+    
+    return roketoStreams;
   }
 }
