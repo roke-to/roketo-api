@@ -1,9 +1,8 @@
+import { RoketoStream } from 'src/common/stream.dto';
 import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
-import { RoketoStream } from '../common/stream.dto';
-
 @Entity()
-export class ArchivedStream {
+export class NftStream {
   @PrimaryColumn()
   streamId: string;
 

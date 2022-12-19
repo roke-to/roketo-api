@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pool } from 'pg';
-
+import { Cron } from '@nestjs/schedule';
 import { UserFt } from './entitites/userFT.entity';
 import { UserNft } from './entitites/userNFT.entity';
 import { plainToInstance } from 'class-transformer';
-import { RoketoStream, StringStreamStatus } from 'src/common/stream.dto';
+import { UsersService } from 'src/users/users.service';
+
+const EACH_5_SECONDS = '*/5 * * * * *';
 
 @Injectable()
 export class TokensService {
@@ -20,6 +22,7 @@ export class TokensService {
     private readonly userFTRepository: Repository<UserFt>,
     @InjectRepository(UserNft)
     private readonly userNFTRepository: Repository<UserNft>,
+    private readonly usersService: UsersService,
   ) {}
 
   async getTokens(accountId: string) {
@@ -47,6 +50,17 @@ export class TokensService {
     await this.userFTRepository.save(updatedUserFTs);
 
     return updatedUserFTs.list;
+  }
+
+  @Cron(EACH_5_SECONDS)
+  async findAllNft() {
+    const users = await this.usersService.findAll();
+
+    await Promise.all(
+      users.map(async (user) => {
+        await this.getNFTs(user.accountId);
+      }),
+    );
   }
 
   async getNFTs(accountId: string) {
@@ -84,7 +98,7 @@ export class TokensService {
     );
     return lastBlock;
   }
-
+    
   private async findlikelyNFTsFromBlock(
     accountId: string,
     fromBlockTimestamp: number,
@@ -93,7 +107,7 @@ export class TokensService {
       await this.findLastBlockByTimestamp();
 
       const ownershipChangeFunctionCalls = `
-          select distinct receipt_receiver_account_id as receiver_account_id, events.token_id as token_id
+          select distinct receipt_receiver_account_id as nft_contract_id, events.token_id as token_id
           from action_receipt_actions
           join assets__non_fungible_token_events as events on emitted_by_contract_account_id = $1
           where args->'args_json'->>'receiver_id' = $1
@@ -105,7 +119,7 @@ export class TokensService {
       `;
   
       const ownershipChangeEvents = `
-          select distinct emitted_by_contract_account_id as receiver_account_id, token_id
+          select distinct emitted_by_contract_account_id as nft_contract_id, token_id
           from assets__non_fungible_token_events
           where token_new_owner_account_id = $1
               and emitted_at_block_timestamp <= $2
@@ -124,9 +138,9 @@ export class TokensService {
 
       return {
         lastBlockTimestamp: Number(lastBlockTimestamp),
-        list: rows.map(({ receiver_account_id, token_id }) => {
+        list: rows.map(({ nft_contract_id, token_id }) => {
           return {
-            receiver_account_id, 
+            nft_contract_id, 
             token_id
           }
         }),
@@ -198,48 +212,5 @@ export class TokensService {
       lastBlockTimestamp: Number(lastBlockTimestamp),
       list: rows.map(({ receiver_account_id }) => receiver_account_id),
     };
-  }
-
-  async findAllNftTransactions(accountId: string): Promise<RoketoStream[]> {
-    const receiverId = 'vault.vengone.testnet';
-
-    const query = `
-        select action_receipt_actions.*, execution_outcomes.*, receipts.* from action_receipt_actions 
-          JOIN execution_outcomes ON execution_outcomes.receipt_id = action_receipt_actions.receipt_id
-          LEFT JOIN receipts ON execution_outcomes.receipt_id = receipts.receipt_id
-          where action_receipt_actions.receipt_receiver_account_id = $1
-            and action_receipt_actions.args->'args_json'->>'sender_id' = $2
-            and action_receipt_actions.action_kind = 'FUNCTION_CALL'
-            and action_receipt_actions.args->>'args_json' is not null
-            and execution_outcomes.status = 'SUCCESS_VALUE' 
-      `;
-
-    const { rows } = await this.pool.query(query, [receiverId, accountId]);
-
-    const roketoStreams = rows.map((stream: any) => {
-      const parsedMsg = JSON.parse(JSON.parse(`"${stream.args.args_json.msg}"`));
-
-      return plainToInstance(
-        RoketoStream,
-        {
-          balance: stream.args.args_json.amount || '',
-          creator_id: accountId || null,
-          description: null,
-          id: stream.originated_from_transaction_hash || '',
-          is_expirable: true,
-          is_locked: false,
-          last_action: stream.executed_in_block_timestamp || null,
-          owner_id: accountId,
-          receiver_id: parsedMsg.nft_contract_id || null,
-          status: StringStreamStatus.Initialized,
-          timestamp_created: stream.executed_in_block_timestamp || null,
-          token_account_id: stream.receipt_predecessor_account_id || null,
-          tokens_per_sec: '',
-          tokens_total_withdrawn: '',
-        }
-      )
-    });
-    
-    return roketoStreams;
   }
 }
