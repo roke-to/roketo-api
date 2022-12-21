@@ -21,8 +21,6 @@ export class RoketoStream {
   last_action: number;
   owner_id: AccountId;
   receiver_id: AccountId;
-  nft_id?: string;
-  nft_contract?: string;
   status: StringStreamStatus;
   timestamp_created: number;
   token_account_id: AccountId;

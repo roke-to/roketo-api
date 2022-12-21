@@ -9,6 +9,7 @@ import { RoketoStream, StringStreamStatus } from 'src/common/stream.dto';
 
 import { UsersService } from 'src/users/users.service';
 import { NftStream } from './entities/nft_stream.entity';
+import { VAULT_CONTRACT_NAME } from 'src/common/config';
 
 const EACH_5_SECONDS = '*/5 * * * * *';
 
@@ -113,8 +114,6 @@ export class NftStreamsService {
   }
 
   async getStreamsToNFT(accountId: string): Promise<RoketoStream[]> {
-    const receiverId = 'vault.vengone.testnet';
-
     const query = `
         select action_receipt_actions.*, execution_outcomes.*, receipts.* from action_receipt_actions 
           JOIN execution_outcomes ON execution_outcomes.receipt_id = action_receipt_actions.receipt_id
@@ -126,7 +125,7 @@ export class NftStreamsService {
             and execution_outcomes.status = 'SUCCESS_VALUE' 
       `;
 
-    const { rows } = await this.pool.query(query, [receiverId, accountId]);
+    const { rows } = await this.pool.query(query, [VAULT_CONTRACT_NAME, accountId]);
   
     const roketoStreams = await Promise.all(
       rows.map(async (stream: any) => {
@@ -146,8 +145,6 @@ export class NftStreamsService {
             last_action: stream.executed_in_block_timestamp || null,
             owner_id: accountId,
             receiver_id: nftOwner,
-            nft_contract: parsedMsg.nft_contract_id || null,
-            nft_id: parsedMsg.nft_id || null,
             status: StringStreamStatus.Initialized,
             timestamp_created: stream.executed_in_block_timestamp || null,
             token_account_id: stream.receipt_predecessor_account_id || null,
