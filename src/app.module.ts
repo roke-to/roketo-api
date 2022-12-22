@@ -10,6 +10,7 @@ import { NearModule } from './near/near.module';
 import { ContractModule } from './contract/contract.module';
 import { TokensModule } from './tokens/tokens.module';
 import { ArchivedStreamsModule } from './archived_streams/archived_streams.module';
+import { NftStreamsModule } from './nft_streams/nft_streams.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ArchivedStreamsModule } from './archived_streams/archived_streams.modul
     ContractModule,
     TokensModule,
     ArchivedStreamsModule,
+    NftStreamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

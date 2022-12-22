@@ -15,6 +15,7 @@ export NEAR_NETWORK_ID=testnet
 export NEAR_NODE_URL=https://rpc.testnet.near.org
 export NEAR_WALLET_URL=https://wallet.testnet.near.org
 export ROKETO_CONTRACT_NAME=streaming-r-v2.dcversus.testnet
+export VAULT_CONTRACT_NAME=vault.vengone.testnet
 ```
 
 ### Prepare local Postgres DB using docker:
@@ -30,7 +31,7 @@ docker-compose up -d
 Set DB connection string to environment variable:
 
 ```bash
-export DATABASE_URL=postgres://postgres:pass123@0.0.0.0/postgres
+export DATABASE_URL=postgres://postgres:mysecretpassword@0.0.0.0/eco-postgres
 ```
 
 Change TypeORM config for development:
@@ -120,6 +121,7 @@ Testnet env vars
 
 ```yml
 - ROKETO_CONTRACT_NAME=streaming-r-v2.dcversus.testnet
+- VAULT_CONTRACT_NAME=vault.vengone.testnet
 - NEAR_NETWORK_ID=testnet
 - NEAR_NODE_URL=https://rpc.testnet.near.org
 - NEAR_WALLET_URL=https://wallet.testnet.near.org
@@ -131,6 +133,7 @@ Prod env vars
 
 ```yml
 - ROKETO_CONTRACT_NAME=streaming.r-v2.near
+- VAULT_CONTRACT_NAME=nft-benifits-vault.contract
 - NEAR_NETWORK_ID=mainnet
 - NEAR_NODE_URL=https://rpc.mainnet.near.org
 - NEAR_WALLET_URL=https://wallet.near.org

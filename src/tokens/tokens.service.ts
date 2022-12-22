@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pool } from 'pg';
-
+import { Cron } from '@nestjs/schedule';
 import { UserFt } from './entitites/userFT.entity';
 import { UserNft } from './entitites/userNFT.entity';
 import { plainToInstance } from 'class-transformer';
+import { UsersService } from 'src/users/users.service';
+
+const EACH_5_SECONDS = '*/5 * * * * *';
 
 @Injectable()
 export class TokensService {
@@ -19,6 +22,7 @@ export class TokensService {
     private readonly userFTRepository: Repository<UserFt>,
     @InjectRepository(UserNft)
     private readonly userNFTRepository: Repository<UserNft>,
+    private readonly usersService: UsersService,
   ) {}
 
   async getTokens(accountId: string) {
@@ -46,6 +50,17 @@ export class TokensService {
     await this.userFTRepository.save(updatedUserFTs);
 
     return updatedUserFTs.list;
+  }
+
+  @Cron(EACH_5_SECONDS)
+  async findAllNft() {
+    const users = await this.usersService.findAll();
+
+    await Promise.all(
+      users.map(async (user) => {
+        await this.getNFTs(user.accountId);
+      }),
+    );
   }
 
   async getNFTs(accountId: string) {
@@ -83,7 +98,7 @@ export class TokensService {
     );
     return lastBlock;
   }
-
+    
   private async findlikelyNFTsFromBlock(
     accountId: string,
     fromBlockTimestamp: number,
@@ -92,7 +107,7 @@ export class TokensService {
       await this.findLastBlockByTimestamp();
 
       const ownershipChangeFunctionCalls = `
-          select distinct receipt_receiver_account_id as receiver_account_id, events.token_id as token_id
+          select distinct receipt_receiver_account_id as nft_contract_id, events.token_id as token_id
           from action_receipt_actions
           join assets__non_fungible_token_events as events on emitted_by_contract_account_id = $1
           where args->'args_json'->>'receiver_id' = $1
@@ -104,7 +119,7 @@ export class TokensService {
       `;
   
       const ownershipChangeEvents = `
-          select distinct emitted_by_contract_account_id as receiver_account_id, token_id
+          select distinct emitted_by_contract_account_id as nft_contract_id, token_id
           from assets__non_fungible_token_events
           where token_new_owner_account_id = $1
               and emitted_at_block_timestamp <= $2
@@ -123,9 +138,9 @@ export class TokensService {
 
       return {
         lastBlockTimestamp: Number(lastBlockTimestamp),
-        list: rows.map(({ receiver_account_id, token_id }) => {
+        list: rows.map(({ nft_contract_id, token_id }) => {
           return {
-            receiver_account_id, 
+            nft_contract_id, 
             token_id
           }
         }),
