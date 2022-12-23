@@ -47,7 +47,7 @@ export class NftStreamsService {
         resolve(
           this.findAllNftTransactions()
         );
-      }, 3000);
+      }, 5000);
     });
   }
   
@@ -71,7 +71,7 @@ export class NftStreamsService {
       this.logger.log('Starting processing streams to NFT...');
 
       await Promise.race(
-        [this.timeoutAfter(10), this.getData()]
+        [this.timeoutAfter(20), this.getData()]
       );
 
       this.logger.log(
