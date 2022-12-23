@@ -16,6 +16,7 @@ export NEAR_NODE_URL=https://rpc.testnet.near.org
 export NEAR_WALLET_URL=https://wallet.testnet.near.org
 export ROKETO_CONTRACT_NAME=streaming-r-v2.dcversus.testnet
 export VAULT_CONTRACT_NAME=vault.vengone.testnet
+export INDEXER_DB_URL=postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer
 ```
 
 ### Prepare local Postgres DB using docker:
