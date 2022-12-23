@@ -84,7 +84,6 @@ export class TokensService {
     }
   }
 
-  @Cron(EACH_5_SECONDS)
   async findAllNft() {
     const users = await this.usersService.findAll();
 
