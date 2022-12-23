@@ -72,7 +72,7 @@ export class NftStreamsService {
       this.logger.log('Starting processing streams to NFT...');
 
       await Promise.race(
-        [this.timeoutAfter(7), this.getData()]
+        [this.timeoutAfter(20), this.getData()]
       );
 
       this.logger.log(
