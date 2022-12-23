@@ -56,7 +56,7 @@ export class TokensService {
     return updatedUserFTs.list;
   }
 
-  @Cron(EACH_5_SECONDS)
+  // @Cron(EACH_5_SECONDS)
   private async findAllNftIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing list of NFTs, skipped.');
