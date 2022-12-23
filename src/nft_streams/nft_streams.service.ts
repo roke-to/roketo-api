@@ -80,6 +80,7 @@ export class NftStreamsService {
     } catch (error) {
       this.logger.error(
         `Failed processing streams to NFT after ${Date.now() - start}ms.`,
+        `URL: ${INDEXER_DB_URL}`,
         error.message,
         error.stack,
       );
