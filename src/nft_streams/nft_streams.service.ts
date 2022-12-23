@@ -42,7 +42,7 @@ export class NftStreamsService {
     });
   }
 
-  // @Cron(EACH_5_SECONDS)
+  @Cron(EACH_5_SECONDS)
   private async findTransactionsToNftIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams to NFT, skipped.');
