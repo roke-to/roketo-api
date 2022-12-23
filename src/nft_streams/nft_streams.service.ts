@@ -42,6 +42,24 @@ export class NftStreamsService {
     });
   }
 
+  private getData() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(
+          this.findAllNftTransactions()
+        );
+      }, 3000);
+    });
+  }
+  
+  private timeoutAfter(seconds: number) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error("request timed-out"));
+      }, seconds * 1000);
+    });
+  }
+
   @Cron(EACH_5_SECONDS)
   private async findTransactionsToNftIfNotBusy() {
     if (this.isBusy) {
@@ -51,10 +69,11 @@ export class NftStreamsService {
     const start = Date.now();
     try {
       this.isBusy = true;
-
       this.logger.log('Starting processing streams to NFT...');
 
-      await this.findAllNftTransactions();
+      await Promise.race(
+        [this.timeoutAfter(7), this.getData()]
+      );
 
       this.logger.log(
         `Finished processing streams to NFT in ${Date.now() - start}ms.`,
