@@ -11,7 +11,7 @@ import { UsersService } from 'src/users/users.service';
 import { NftStream } from './entities/nft_stream.entity';
 import { VAULT_CONTRACT_NAME, INDEXER_DB_URL } from 'src/common/config';
 
-const EACH_5_SECONDS = '*/5 * * * * *';
+const EACH_1_HOUR = '59 * * * *';
 
 @Injectable()
 export class NftStreamsService {
@@ -59,7 +59,7 @@ export class NftStreamsService {
     });
   }
 
-  @Cron(EACH_5_SECONDS)
+  @Cron(EACH_1_HOUR)
   private async findTransactionsToNftIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams to NFT, skipped.');
@@ -71,7 +71,7 @@ export class NftStreamsService {
       this.logger.log('Starting processing streams to NFT...');
 
       await Promise.race(
-        [this.timeoutAfter(30), this.getData()]
+        [this.timeoutAfter(60), this.getData()]
       );
 
       this.logger.log(
