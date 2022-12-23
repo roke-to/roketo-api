@@ -9,7 +9,7 @@ import { RoketoStream, StringStreamStatus } from 'src/common/stream.dto';
 
 import { UsersService } from 'src/users/users.service';
 import { NftStream } from './entities/nft_stream.entity';
-import { VAULT_CONTRACT_NAME } from 'src/common/config';
+import { VAULT_CONTRACT_NAME, INDEXER_DB_URL } from 'src/common/config';
 
 const EACH_5_SECONDS = '*/5 * * * * *';
 
@@ -23,8 +23,7 @@ export class NftStreamsService {
   ) {}
 
   private readonly pool = new Pool({
-    connectionString:
-      'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
+    connectionString: INDEXER_DB_URL,
   });
 
   isBusy = false;
@@ -72,7 +71,7 @@ export class NftStreamsService {
       this.logger.log('Starting processing streams to NFT...');
 
       await Promise.race(
-        [this.timeoutAfter(20), this.getData()]
+        [this.timeoutAfter(10), this.getData()]
       );
 
       this.logger.log(

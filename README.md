@@ -127,6 +127,7 @@ Testnet env vars
 - NEAR_WALLET_URL=https://wallet.testnet.near.org
 - API_HOST=https://api.test.roke.to
 - DAPP_HOST=https://app2.test.roke.to
+- INDEXER_DB_URL="postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer"
 ```
 
 Prod env vars
@@ -139,4 +140,5 @@ Prod env vars
 - NEAR_WALLET_URL=https://wallet.near.org
 - API_HOST=https://api.roke.to
 - DAPP_HOST=https://app2.roke.to
+- INDEXER_DB_URL="postgres://public_readonly:nearprotocol@mainnet.db.explorer.indexer.near.dev/mainnet_explorer"
 ```

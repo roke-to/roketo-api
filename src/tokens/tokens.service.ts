@@ -7,6 +7,7 @@ import { UserFt } from './entitites/userFT.entity';
 import { UserNft } from './entitites/userNFT.entity';
 import { plainToInstance } from 'class-transformer';
 import { UsersService } from 'src/users/users.service';
+import { INDEXER_DB_URL } from 'src/common/config';
 
 const EACH_5_SECONDS = '*/5 * * * * *';
 
@@ -21,8 +22,7 @@ export class TokensService {
   ) { }
 
   private readonly pool = new Pool({
-    connectionString:
-      'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
+    connectionString: INDEXER_DB_URL,
   });
   
   isBusy = false;
