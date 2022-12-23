@@ -145,7 +145,7 @@ export class UsersService {
 
   isBusy = false;
 
-  // @Cron(EACH_5_SECONDS)
+  @Cron(EACH_5_SECONDS)
   async sendInitialVerificationEmailsIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy sending verification emails, skipped.');

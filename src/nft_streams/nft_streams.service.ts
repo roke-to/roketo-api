@@ -27,6 +27,8 @@ export class NftStreamsService {
       'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
   });
 
+  isBusy = false;
+
   private readonly logger = new Logger('Cron');
   
   async findAll(accountId: string) {
@@ -41,6 +43,33 @@ export class NftStreamsService {
   }
 
   @Cron(EACH_5_SECONDS)
+  private async findTransactionsToNftIfNotBusy() {
+    if (this.isBusy) {
+      this.logger.log('Busy processing streams to NFT, skipped.');
+      return;
+    }
+    const start = Date.now();
+    try {
+      this.isBusy = true;
+
+      this.logger.log('Starting processing streams to NFT...');
+
+      await this.findAllNftTransactions();
+
+      this.logger.log(
+        `Finished processing streams to NFT in ${Date.now() - start}ms.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed processing streams to NFT after ${Date.now() - start}ms.`,
+        error.message,
+        error.stack,
+      );
+    } finally {
+      this.isBusy = false;
+    }
+  }
+
   async findAllNftTransactions() {
     const users = await this.usersService.findAll();
     await Promise.all(

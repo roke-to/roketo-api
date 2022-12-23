@@ -159,6 +159,7 @@ jobs:
             export APP_TAG=${{env.APP_TAG}}
             export REG=${{ matrix.registry }}
             export ROKETO_CONTRACT_NAME=streaming-r-v2.dcversus.testnet
+            export VAULT_CONTRACT_NAME=vault.vengone.testnet
             export NEAR_NETWORK_ID=testnet
             export NEAR_NODE_URL=https://rpc.testnet.near.org
             export NEAR_WALLET_URL=https://wallet.testnet.near.org

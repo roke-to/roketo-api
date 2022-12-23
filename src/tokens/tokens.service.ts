@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pool } from 'pg';
@@ -12,18 +12,22 @@ const EACH_5_SECONDS = '*/5 * * * * *';
 
 @Injectable()
 export class TokensService {
-  private readonly pool = new Pool({
-    connectionString:
-      'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
-  });
-
   constructor(
     @InjectRepository(UserFt)
     private readonly userFTRepository: Repository<UserFt>,
     @InjectRepository(UserNft)
     private readonly userNFTRepository: Repository<UserNft>,
     private readonly usersService: UsersService,
-  ) {}
+  ) { }
+
+  private readonly pool = new Pool({
+    connectionString:
+      'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer',
+  });
+  
+  isBusy = false;
+
+  private readonly logger = new Logger('Cron');
 
   async getTokens(accountId: string) {
     const userFTs = await this.userFTRepository.preload({
@@ -50,6 +54,34 @@ export class TokensService {
     await this.userFTRepository.save(updatedUserFTs);
 
     return updatedUserFTs.list;
+  }
+
+  @Cron(EACH_5_SECONDS)
+  private async findAllNftIfNotBusy() {
+    if (this.isBusy) {
+      this.logger.log('Busy processing list of NFTs, skipped.');
+      return;
+    }
+    const start = Date.now();
+    try {
+      this.isBusy = true;
+
+      this.logger.log('Starting processing list of NFTs...');
+
+      await this.findAllNft();
+
+      this.logger.log(
+        `Finished processing list of NFTs in ${Date.now() - start}ms.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed processing list of NFTs after ${Date.now() - start}ms.`,
+        error.message,
+        error.stack,
+      );
+    } finally {
+      this.isBusy = false;
+    }
   }
 
   @Cron(EACH_5_SECONDS)
