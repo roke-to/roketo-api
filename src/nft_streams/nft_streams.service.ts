@@ -13,6 +13,8 @@ import { VAULT_CONTRACT_NAME, INDEXER_DB_URL } from 'src/common/config';
 
 const EACH_1_HOUR = '59 * * * *';
 
+const EACH_5_SECONDS = '*/5 * * * * *';
+
 @Injectable()
 export class NftStreamsService {
   constructor(
@@ -59,7 +61,8 @@ export class NftStreamsService {
     });
   }
 
-  @Cron(EACH_1_HOUR)
+  // @Cron(EACH_1_HOUR)
+  @Cron(EACH_5_SECONDS)
   private async findTransactionsToNftIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams to NFT, skipped.');
@@ -91,18 +94,20 @@ export class NftStreamsService {
 
   async findAllNftTransactions() {
     const users = await this.usersService.findAll();
-    await Promise.all(
-      users.map(async (user) => {
-        const currentStreams = await this.getStreamsToNFT(
-          user.accountId,
-        );
-
-        await this.processUserStreams(user, currentStreams);
-      }),
+    
+    let usersIds = [];
+    users.map((user) => {
+      usersIds.push(user.accountId)
+    })
+    
+    const currentStreams = await this.getStreamsToNFT(
+      usersIds,
     );
+
+    await this.processUserStreams(currentStreams);
   }
 
-  async processUserStreams(user, currentStreams) {
+  async processUserStreams(currentStreams) {
     let queryRunner;
 
     const streams = await Promise.all(
@@ -133,7 +138,7 @@ export class NftStreamsService {
       await queryRunner.commitTransaction();
     } catch (e) {
       this.logger.error(e);
-      this.logger.error(`Error while processing streams to nft of ${user.accountId}`);
+      this.logger.error(`Error while processing streams to nft of`);
 
       await queryRunner?.rollbackTransaction();
     } finally {
@@ -146,10 +151,10 @@ export class NftStreamsService {
     token_id: string,
   ) {
       const ownershipChangeEvents = `
-          select token_new_owner_account_id as owner_id
-          from assets__non_fungible_token_events
-          where emitted_by_contract_account_id = $1
-              and token_id = $2
+          SELECT token_new_owner_account_id AS owner_id
+          FROM assets__non_fungible_token_events
+          WHERE emitted_by_contract_account_id = $1
+              AND token_id = $2
           ORDER BY emitted_at_block_timestamp DESC LIMIT 1
       `;
 
@@ -161,19 +166,19 @@ export class NftStreamsService {
     return rows[0].owner_id;
   }
 
-  async getStreamsToNFT(accountId: string): Promise<RoketoStream[]> {
+  async getStreamsToNFT(accountIds: Array<string>): Promise<RoketoStream[]> {
     const query = `
-        select action_receipt_actions.*, execution_outcomes.*, receipts.* from action_receipt_actions 
+        SELECT action_receipt_actions.*, execution_outcomes.*, receipts.* FROM action_receipt_actions 
           JOIN execution_outcomes ON execution_outcomes.receipt_id = action_receipt_actions.receipt_id
           LEFT JOIN receipts ON execution_outcomes.receipt_id = receipts.receipt_id
-          where action_receipt_actions.receipt_receiver_account_id = $1
-            and action_receipt_actions.args->'args_json'->>'sender_id' = $2
-            and action_receipt_actions.action_kind = 'FUNCTION_CALL'
-            and action_receipt_actions.args->>'args_json' is not null
-            and execution_outcomes.status = 'SUCCESS_VALUE' 
+          WHERE action_receipt_actions.receipt_receiver_account_id IN ($1)
+            AND action_receipt_actions.args->'args_json'->>'sender_id' = $2
+            AND action_receipt_actions.action_kind = 'FUNCTION_CALL'
+            AND action_receipt_actions.args->>'args_json' is not null
+            AND execution_outcomes.status = 'SUCCESS_VALUE' 
       `;
 
-    const { rows } = await this.pool.query(query, [VAULT_CONTRACT_NAME, accountId]);
+    const { rows } = await this.pool.query(query, [VAULT_CONTRACT_NAME, accountIds.toString()]);
   
     const roketoStreams = await Promise.all(
       rows.map(async (stream: any) => {
@@ -185,13 +190,13 @@ export class NftStreamsService {
           RoketoStream,
           {
             balance: stream.args.args_json.amount || '',
-            creator_id: accountId || null,
+            creator_id: stream.receipt_receiver_account_id || null,
             description: stream.args.args_json.msg,
             id: stream.originated_from_transaction_hash || '',
             is_expirable: true,
             is_locked: false,
             last_action: stream.executed_in_block_timestamp || null,
-            owner_id: accountId,
+            owner_id: stream.receipt_receiver_account_id,
             receiver_id: nftOwner,
             status: StringStreamStatus.Initialized,
             timestamp_created: stream.executed_in_block_timestamp || null,

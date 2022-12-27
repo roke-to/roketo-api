@@ -163,7 +163,7 @@ jobs:
             export DAPP_HOST=https://app2.roke.to
             export DATABASE_URL="postgres://mainuser:ltkfqhfjnescnhtt@34.67.148.83:5432/roketo"
             export DB_CONNSTRING="postgres://mainuser:ltkfqhfjnescnhtt@34.67.148.83:5432/roketo"
-            export INDEXER_DB_URL="postgres://public_readonly:nearprotocol@mainnet.db.explorer.indexer.near.dev/mainnet_explorer"
+            export INDEXER_DB_URL="postgres://wallet:pass@34.105.40.131/mainnet_explorer"
             export DISABLE_DATABASE_SSL=true
             mkdir -p ~/services/$APP_HOSTNAME/
             mv ~/tmp/docker-compose.yml ~/services/$APP_HOSTNAME/docker-compose.yml
