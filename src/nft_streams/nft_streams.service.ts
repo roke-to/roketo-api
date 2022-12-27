@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pool } from 'pg';
 import { Connection, Repository } from 'typeorm';
@@ -10,10 +10,6 @@ import { RoketoStream, StringStreamStatus } from 'src/common/stream.dto';
 import { UsersService } from 'src/users/users.service';
 import { NftStream } from './entities/nft_stream.entity';
 import { VAULT_CONTRACT_NAME, INDEXER_DB_URL } from 'src/common/config';
-
-const EACH_1_HOUR = '59 * * * *';
-
-const EACH_5_SECONDS = '*/5 * * * * *';
 
 @Injectable()
 export class NftStreamsService {
@@ -61,8 +57,7 @@ export class NftStreamsService {
     });
   }
 
-  // @Cron(EACH_1_HOUR)
-  @Cron(EACH_5_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   private async findTransactionsToNftIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams to NFT, skipped.');
