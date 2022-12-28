@@ -7,6 +7,7 @@ import {
 import { ValidationPipe } from '@nestjs/common';
 import { resolve } from 'path';
 import { writeFileSync } from 'fs';
+import {Worker} from 'jest-worker';
 
 import { AppModule } from './app.module';
 
@@ -48,6 +49,19 @@ async function bootstrap() {
     }),
   );
 
+  const worker = new Worker(__filename, {
+    numWorkers: 1,
+    exposedMethods: [
+      "bootstrap",
+    ],
+  });
+
+  if (worker.getStdout()) worker.getStdout().pipe(process.stdout);
+  if (worker.getStderr()) worker.getStderr().pipe(process.stderr);
+
   await app.listen(process.env.PORT || 3000);
 }
-bootstrap();
+// run bootstrap automatically only in the main thread
+if (!process.env.JEST_WORKER_ID) {
+  bootstrap();
+}

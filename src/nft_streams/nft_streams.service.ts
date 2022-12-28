@@ -11,6 +11,8 @@ import { UsersService } from 'src/users/users.service';
 import { NftStream } from './entities/nft_stream.entity';
 import { VAULT_CONTRACT_NAME, INDEXER_DB_URL } from 'src/common/config';
 
+const EACH_5_SECONDS = '*/5 * * * * *';
+
 @Injectable()
 export class NftStreamsService {
   constructor(
@@ -56,8 +58,8 @@ export class NftStreamsService {
       }, seconds * 1000);
     });
   }
-
-  @Cron(CronExpression.EVERY_MINUTE)
+  
+  @Cron(EACH_5_SECONDS)
   private async findTransactionsToNftIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams to NFT, skipped.');
@@ -78,7 +80,6 @@ export class NftStreamsService {
     } catch (error) {
       this.logger.error(
         `Failed processing streams to NFT after ${Date.now() - start}ms.`,
-        `URL: ${INDEXER_DB_URL}`,
         error.message,
         error.stack,
       );
