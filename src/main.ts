@@ -49,7 +49,7 @@ async function bootstrap() {
     }),
   );
 
-  const worker = new Worker(__filename, {
+  const worker = new Worker(__dirname + '/worker.js', {
     numWorkers: 1,
     exposedMethods: [
       "bootstrap",
@@ -58,6 +58,8 @@ async function bootstrap() {
 
   if (worker.getStdout()) worker.getStdout().pipe(process.stdout);
   if (worker.getStderr()) worker.getStderr().pipe(process.stderr);
+
+  worker.bootstrap();
 
   await app.listen(process.env.PORT || 3000);
 }
