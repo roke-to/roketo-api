@@ -135,7 +135,7 @@ Prod env vars
 
 ```yml
 - ROKETO_CONTRACT_NAME=streaming.r-v2.near
-- VAULT_CONTRACT_NAME=nft-benifits-vault.contract
+- VAULT_CONTRACT_NAME=vault-roketo.near
 - NEAR_NETWORK_ID=mainnet
 - NEAR_NODE_URL=https://rpc.mainnet.near.org
 - NEAR_WALLET_URL=https://wallet.near.org
