@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Pool } from 'pg';
+import { Pool, Query } from 'pg';
 import { Connection, Repository } from 'typeorm';
 
 import { plainToInstance } from 'class-transformer';
@@ -13,7 +13,18 @@ import { VAULT_CONTRACT_NAME, INDEXER_DB_URL } from 'src/common/config';
 import { UserNft } from 'src/tokens/entitites/userNFT.entity';
 import { UserFt } from 'src/tokens/entitites/userFT.entity';
 
-const EACH_5_SECONDS = '*/5 * * * * *';
+const submit = Query.prototype.submit;
+
+Query.prototype.submit = function () {
+  const text = this.text;
+  const values = this.values || [];
+  const query = text.replace(/\$([0-9]+)/g, (m, v) =>
+    JSON.stringify(values[parseInt(v) - 1]).replace(/"/g, "'"),
+  );
+  console.log(query);
+  // eslint-disable-next-line prefer-rest-params
+  submit.apply(this, arguments);
+};
 
 @Injectable()
 export class IndexerService {
@@ -28,32 +39,31 @@ export class IndexerService {
 
   private readonly pool = new Pool({
     connectionString: INDEXER_DB_URL,
+    log: (msg) => console.log(msg),
   });
 
   isBusy = false;
 
   private readonly logger = new Logger('Cron');
-  
+
   // Transactions to NFT
   private getNftTransactionsData() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(
-          this.findAllNftTransactions()
-        );
+        resolve(this.findAllNftTransactions());
       }, 5000);
     });
   }
-  
+
   private nftTransactionsTimeout(seconds: number) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        reject(new Error("request timed-out"));
+        reject(new Error('request timed-out'));
       }, seconds * 1000);
     });
   }
-  
-  @Cron(EACH_5_SECONDS)
+
+  @Cron(CronExpression.EVERY_5_SECONDS)
   private async findTransactionsToNftIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams to NFT, skipped.');
@@ -64,9 +74,10 @@ export class IndexerService {
       this.isBusy = true;
       this.logger.log('Starting processing streams to NFT...');
 
-      await Promise.race(
-        [this.nftTransactionsTimeout(60), this.getNftTransactionsData()]
-      );
+      await Promise.race([
+        this.nftTransactionsTimeout(60),
+        this.getNftTransactionsData(),
+      ]);
 
       this.logger.log(
         `Finished processing streams to NFT in ${Date.now() - start}ms.`,
@@ -84,15 +95,13 @@ export class IndexerService {
 
   async findAllNftTransactions() {
     const users = await this.usersService.findAll();
-    
-    let usersIds = [];
+
+    const usersIds: any[] = [];
     users.map((user) => {
-      usersIds.push(user.accountId)
-    })
-    
-    const currentStreams = await this.getStreamsToNFT(
-      usersIds,
-    );
+      usersIds.push(user.accountId);
+    });
+
+    const currentStreams = await this.getTransactionsToNFT(usersIds);
 
     await this.processUserStreams(currentStreams);
   }
@@ -102,28 +111,22 @@ export class IndexerService {
 
     const streams = await Promise.all(
       currentStreams.map(async (stream: RoketoStream) => {
-
-        return plainToInstance(
-          NftStream,
-          {
-            streamId: stream.id,
-            accountId: stream.owner_id,
-            receiverId: stream.receiver_id,
-            startedAt: new Date(stream.timestamp_created / 1000000),
-            finishedAt: new Date(stream.last_action / 1000000),
-            payload: {stream: stream}
-          }
-        )
-      })
+        return plainToInstance(NftStream, {
+          streamId: stream.id,
+          accountId: stream.owner_id,
+          receiverId: stream.receiver_id,
+          startedAt: new Date(stream.timestamp_created / 1000000),
+          finishedAt: new Date(stream.last_action / 1000000),
+          payload: { stream: stream },
+        });
+      }),
     );
-    
+
     try {
       queryRunner = this.connection.createQueryRunner();
       await queryRunner.startTransaction();
 
-      await Promise.all([
-        queryRunner.manager.save(NftStream, streams)
-      ]);
+      await Promise.all([queryRunner.manager.save(NftStream, streams)]);
 
       await queryRunner.commitTransaction();
     } catch (e) {
@@ -136,11 +139,8 @@ export class IndexerService {
     }
   }
 
-  private async findNFTsOwner(
-    nftId: string,
-    token_id: string,
-  ) {
-      const ownershipChangeEvents = `
+  private async findNFTsOwner(nftId: string, token_id: string) {
+    const ownershipChangeEvents = `
           SELECT token_new_owner_account_id AS owner_id
           FROM assets__non_fungible_token_events
           WHERE emitted_by_contract_account_id = $1
@@ -148,54 +148,62 @@ export class IndexerService {
           ORDER BY emitted_at_block_timestamp DESC LIMIT 1
       `;
 
-      const { rows } = await this.pool.query(ownershipChangeEvents, [
-          nftId, 
-          token_id, 
-      ]);
-    
+    const { rows } = await this.pool.query(ownershipChangeEvents, [
+      nftId,
+      token_id,
+    ]);
+
     return rows[0].owner_id;
   }
 
-  async getStreamsToNFT(accountIds: Array<string>): Promise<RoketoStream[]> {
+  async getTransactionsToNFT(
+    accountIds: Array<string>,
+  ): Promise<RoketoStream[]> {
+    const escapedAccounts = accountIds
+      .filter(Boolean)
+      .map((account) => `'${account}'`)
+      .join(', ');
     const query = `
         SELECT action_receipt_actions.*, execution_outcomes.*, receipts.* FROM action_receipt_actions 
           JOIN execution_outcomes ON execution_outcomes.receipt_id = action_receipt_actions.receipt_id
           LEFT JOIN receipts ON execution_outcomes.receipt_id = receipts.receipt_id
-          WHERE action_receipt_actions.receipt_receiver_account_id IN ($1)
-            AND action_receipt_actions.args->'args_json'->>'sender_id' = $2
+          WHERE action_receipt_actions.receipt_receiver_account_id = $1
+            AND action_receipt_actions.args->'args_json'->>'sender_id' IN (${escapedAccounts})
             AND action_receipt_actions.action_kind = 'FUNCTION_CALL'
             AND action_receipt_actions.args->>'args_json' is not null
             AND execution_outcomes.status = 'SUCCESS_VALUE' 
       `;
 
-    const { rows } = await this.pool.query(query, [VAULT_CONTRACT_NAME, accountIds.toString()]);
-  
+    const { rows } = await this.pool.query(query, [VAULT_CONTRACT_NAME]);
+
     const roketoStreams = await Promise.all(
       rows.map(async (stream: any) => {
-        const parsedMsg = JSON.parse(JSON.parse(`"${stream.args.args_json.msg}"`));
-  
-        const nftOwner = await this.findNFTsOwner(parsedMsg.nft_contract_id, parsedMsg.nft_id);
-  
-        return plainToInstance(
-          RoketoStream,
-          {
-            balance: stream.args.args_json.amount || '',
-            creator_id: stream.receipt_receiver_account_id || null,
-            description: stream.args.args_json.msg,
-            id: stream.originated_from_transaction_hash || '',
-            is_expirable: true,
-            is_locked: false,
-            last_action: stream.executed_in_block_timestamp || null,
-            owner_id: stream.receipt_receiver_account_id,
-            receiver_id: nftOwner,
-            status: StringStreamStatus.Initialized,
-            timestamp_created: stream.executed_in_block_timestamp || null,
-            token_account_id: stream.receipt_predecessor_account_id || null,
-            tokens_per_sec: '',
-            tokens_total_withdrawn: '',
-          }
-        )
-      })
+        const parsedMsg = JSON.parse(
+          JSON.parse(`"${stream.args.args_json.msg}"`),
+        );
+
+        const nftOwner = await this.findNFTsOwner(
+          parsedMsg.nft_contract_id,
+          parsedMsg.nft_id,
+        );
+
+        return plainToInstance(RoketoStream, {
+          balance: stream.args.args_json.amount || '',
+          creator_id: stream.receipt_receiver_account_id || null,
+          description: stream.args.args_json.msg,
+          id: stream.originated_from_transaction_hash || '',
+          is_expirable: true,
+          is_locked: false,
+          last_action: stream.executed_in_block_timestamp || null,
+          owner_id: stream.receipt_receiver_account_id,
+          receiver_id: nftOwner,
+          status: StringStreamStatus.Initialized,
+          timestamp_created: stream.executed_in_block_timestamp || null,
+          token_account_id: stream.receipt_predecessor_account_id || null,
+          tokens_per_sec: '',
+          tokens_total_withdrawn: '',
+        });
+      }),
     );
 
     return roketoStreams;
@@ -204,23 +212,21 @@ export class IndexerService {
   // Get user to FT
 
   private getFtData() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(
-          this.findAllFt()
-        );
+        resolve(this.findAllFt());
       }, 5000);
     });
   }
-  
+
   private ftTimeout(seconds: number) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        reject(new Error("request timed-out"));
+        reject(new Error('request timed-out'));
       }, seconds * 1000);
     });
   }
-  @Cron(EACH_5_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   private async findAllFtIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing list of FTs, skipped.');
@@ -232,9 +238,7 @@ export class IndexerService {
 
       this.logger.log('Starting processing list of FTs...');
 
-      await Promise.race(
-        [this.ftTimeout(60), this.getFtData()]
-      );
+      await Promise.race([this.ftTimeout(60), this.getFtData()]);
 
       this.logger.log(
         `Finished processing list of FTs in ${Date.now() - start}ms.`,
@@ -259,7 +263,7 @@ export class IndexerService {
       }),
     );
   }
-  
+
   async getTokens(accountId: string) {
     const userFTs = await this.userFTRepository.preload({
       accountId,
@@ -360,7 +364,7 @@ export class IndexerService {
     );
     return lastBlock;
   }
-    
+
   private async findlikelyNFTsFromBlock(
     accountId: string,
     fromBlockTimestamp: number,
@@ -368,7 +372,7 @@ export class IndexerService {
     const { block_timestamp: lastBlockTimestamp } =
       await this.findLastBlockByTimestamp();
 
-      const ownershipChangeFunctionCalls = `
+    const ownershipChangeFunctionCalls = `
           select distinct receipt_receiver_account_id as nft_contract_id, events.token_id as token_id
           from action_receipt_actions
           join assets__non_fungible_token_events as events on emitted_by_contract_account_id = $1
@@ -379,8 +383,8 @@ export class IndexerService {
               and receipt_included_in_block_timestamp <= $2
               and receipt_included_in_block_timestamp > $3
       `;
-  
-      const ownershipChangeEvents = `
+
+    const ownershipChangeEvents = `
           select distinct emitted_by_contract_account_id as nft_contract_id, token_id
           from assets__non_fungible_token_events
           where token_new_owner_account_id = $1
@@ -388,25 +392,20 @@ export class IndexerService {
               and emitted_at_block_timestamp > $3
       `;
 
-      const { rows } = await this.pool.query(
-        [ownershipChangeFunctionCalls, ownershipChangeEvents].join(
-          ' union '
-        ), 
-        [
-          accountId, 
-          lastBlockTimestamp, 
-          fromBlockTimestamp
-        ]);
+    const { rows } = await this.pool.query(
+      [ownershipChangeFunctionCalls, ownershipChangeEvents].join(' union '),
+      [accountId, lastBlockTimestamp, fromBlockTimestamp],
+    );
 
-      return {
-        lastBlockTimestamp: Number(lastBlockTimestamp),
-        list: rows.map(({ nft_contract_id, token_id }) => {
-          return {
-            nft_contract_id, 
-            token_id
-          }
-        }),
-      };
+    return {
+      lastBlockTimestamp: Number(lastBlockTimestamp),
+      list: rows.map(({ nft_contract_id, token_id }) => {
+        return {
+          nft_contract_id,
+          token_id,
+        };
+      }),
+    };
   }
 
   private async findLikelyTokensFromBlock(

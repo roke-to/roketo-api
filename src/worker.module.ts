@@ -12,7 +12,7 @@ import { IndexerModule } from './indexer/indexer.module';
     AuthModule,
     TypeOrmModule.forRoot(),
     ScheduleModule.forRoot(),
-    IndexerModule
+    IndexerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

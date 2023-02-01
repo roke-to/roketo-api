@@ -2,7 +2,7 @@ import { ArchivedStream } from '../archived_streams/archived_stream.entity';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { plainToInstance } from 'class-transformer';
 import BigNumber from 'bignumber.js';
 import { JwtService } from '@nestjs/jwt';
@@ -16,8 +16,6 @@ import { Notification, NotificationType } from './notification.entity';
 import { API_HOST, DAPP_HOST } from '../common/config';
 
 const UNSUBSCRIBE_COMMAND = 'unsubscribe';
-
-const EACH_5_SECONDS = '*/5 * * * * *';
 
 @Injectable()
 export class NotificationsService {
@@ -44,7 +42,7 @@ export class NotificationsService {
     });
   }
 
-  @Cron(EACH_5_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   private async generateIfNotBusy() {
     if (this.isBusy) {
       this.logger.log('Busy processing streams, skipped.');

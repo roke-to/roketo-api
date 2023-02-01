@@ -10,13 +10,10 @@ export class NftStreamsService {
     @InjectRepository(NftStream)
     private readonly nftStreamsRepository: Repository<NftStream>,
   ) {}
-  
+
   async findAll(accountId: string) {
     return await this.nftStreamsRepository.find({
-      where: [
-        { accountId },
-        { receiverId: accountId }
-      ],
+      where: [{ accountId }, { receiverId: accountId }],
       order: { startedAt: 'DESC' },
       take: 100,
     });

@@ -22,6 +22,6 @@ export class NftStream {
 
   @Column({ type: 'json', default: {} })
   payload: {
-    stream: RoketoStream
+    stream: RoketoStream;
   };
 }
