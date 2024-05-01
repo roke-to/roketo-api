@@ -71,7 +71,7 @@ yarn start:dev
 To drop all the data from your local DB and mirror testnet DB run the following command (it should NOT log any errors):
 
 ```bash
-pg_dump --no-privileges --format c --dbname=postgres://wbfowrsvetlpvg:deb9d553b6b888ee55efa391dbb4a1dbbd1c16d6505534ca962359cb04e926cb@ec2-3-211-221-185.compute-1.amazonaws.com:5432/d9jumvarl5n3c | pg_restore --no-owner --clean --if-exists --dbname=$DATABASE_URL
+pg_dump --no-privileges --format c --dbname=$DB_URL | pg_restore --no-owner --clean --if-exists --dbname=$DATABASE_URL
 ```
 
 You may need to install `postgresql-14` Linux package or `brew upgrade postgresql` for macOS first.
@@ -116,7 +116,7 @@ docker images
 # REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
 # <none>       <none>    9d1b89be622a   2 minutes ago   405MB
 
-docker run -p 4001:3000 --env DATABASE_URL="postgres://rocket:bkjyvfcr,eltn;bnm@34.163.1.233:8084/rocketdb" --env DISABLE_DATABASE_SSL=true 9d1b89be622a
+docker run -p 4001:3000 --env DATABASE_URL=$DB_URL --env DISABLE_DATABASE_SSL=true $ACCESS_STRING
 ```
 
 Testnet env vars
